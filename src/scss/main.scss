@@ -1,0 +1,210 @@
+@use 'sass:math';
+
+@import "reset";
+@import "plugin";
+@import "gutter";
+@import "animate";
+@import "markdown";
+@import "marker";   // map marker
+
+body{
+    background-color: #f2f2f2;
+}
+
+.header{
+    line-height: 60px;
+}
+
+body{
+    position: relative;
+}
+
+.home{
+    @include box-shadow(2px 2px 5px rgba(121, 85, 72, 0.39));
+    padding: 5px 8px;
+    @include border-radius(5px);
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 0.8rem;
+    background-color: white;
+    cursor: pointer;
+}
+
+#panel{
+    position: absolute;
+    top: 60px;
+    right: 60px;
+    bottom: 60px;
+}
+
+.textarea{
+    padding: 2px 3px;
+    min-height: 30px;
+    border: 1px solid transparentize(black, 0.8);
+    @include border-radius(3px);
+    &:hover{
+        outline: 2px solid transparentize($color-main, 0.5);
+        //background-color: transparentize($color-main, 0.9);
+        background-color: white;
+        cursor: text;
+        border-color: $color-main;
+    }
+}
+
+
+.menu{
+    overflow: hidden;
+    background-color: white;
+    top: 30px;
+    width: 150px;
+    @include border-radius(8px);
+}
+.menu-item{
+    @extend .unselectable;
+    cursor: pointer;
+    border-bottom: 1px solid $border-normal;
+    padding: 5px 10px 5px 30px;
+    &:last-child{
+        border: none;
+    }
+    &:hover{
+        background-color: rgba(0,0,0,0.05);
+    }
+    &:active{
+        transform: translateY(2px);
+    }
+}
+
+
+.button-center{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.btn-narrow{
+    padding: 7px;
+}
+
+.input-focus{
+    input{
+        &:focus{
+            animation-name: focus;
+        }
+    }
+}
+
+@-webkit-keyframes focus {
+    from {outline-width: 5px;}
+    to {outline-width: 0;}
+}
+@keyframes focus {
+    from {outline-width: 5px;}
+    to {outline-width: 0;}
+}
+
+.button-float{
+    z-index: 1000;
+    background-color: white;
+    width: $width-float-btn;
+    font-size: 25px;
+    line-height: $width-float-btn;
+    text-align: center;
+    height: $width-float-btn;
+    @include border-radius($width-float-btn);
+    border: 1px solid $border-normal;
+    @extend .btn-like;
+    &:hover{
+        border-color: $color-primary;
+        color: $color-primary;
+        @include box-shadow(1px 2px 2px transparentize(black, 0.8))
+    }
+}
+
+.table-date{
+    font-family: "JetBrains Mono", sans-serif;
+    line-height: 1;
+    .create-date{}
+    .modify-date{
+        color: $orange;
+    }
+}
+
+
+// 操作面板中 table 内部的一些操作按钮
+$height-btn: 28px;
+.lnglat{
+    cursor: pointer;
+    flex-shrink: 0;
+    .lng, .lat{
+        white-space: nowrap;
+        font-size: 10px;
+        height: math.div(( $height-btn - 2 ), 2);
+        line-height: math.div(( $height-btn - 2 ), 2);
+    }
+    &:active{
+        transform: translateY(1px);
+        color: $color-main;
+    }
+}
+.operation{
+    display: flex;
+}
+.move{
+    display: flex;
+    flex-flow: column nowrap;
+    flex-shrink: 0;
+    > *{
+        margin: 0 auto;
+        cursor: pointer;
+        text-align: center;
+        font-size: 0.5rem;
+        display: block;
+        height: math.div(($height-btn - 2), 2);
+        width: math.div(($height-btn - 2), 2) + 6;
+        line-height: math.div(($height-btn - 2), 2);
+        background-color: $border-normal;
+
+        &:hover{
+            color: white;
+            background: $color-main;
+        }
+        &:active{
+            transform: translateY(2px);
+        }
+    }
+    .up{
+        @include border-radius(3px 3px 0 0);
+    }
+    .down{
+        @include border-radius(0 0 3px 3px);
+    }
+}
+.delete{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    i {
+        height: $height-btn;
+        width: $height-btn;
+        @include border-radius(3px);
+        cursor: pointer;
+        &:hover{
+            color: white;
+            background-color: $color-danger;
+        }
+        &:active{
+            transform: translateY(2px);
+        }
+    }
+}
+
+.hidden{
+    display: none;
+}
+
+
+@import "overwrite-el-ui";
+@import "overwrite-amap";

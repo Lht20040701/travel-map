@@ -1,0 +1,57 @@
+// Colors
+$green            : #4CD964;
+$cyan             : #5AC8FA;
+$blue             : #007AFF;
+$purple           : #5856D6;
+$magenta          : #FF2D70;
+$red              : #FF3B30;
+$orange           : #FF9500;
+$yellow           : #FFCC00;
+$gray             : #8E8E93;
+
+// ELEMENT COLORS
+$color-main       : $magenta;
+$border-color-nav: transparentize($color-main, 0.8);
+$border-light: #f2f2f2;
+
+// FONT SIZE
+$fz-title: 16px;
+$fz-info: 30px;
+$fz-normal: 13px;
+$fz-small: 11px;
+
+$bg-active: transparentize($color-main, 0.9);
+$bg-second: transparentize(black, 0.95);
+$bg-light: #f7f7f7;
+
+
+$color-primary    : #409EFF;
+$color-success    : #67C23A;
+$color-warning    : #E6A23C;
+$color-danger     : #F56C6C;
+$color-info       : #909399;
+
+$border-normal: #eee;
+
+$text-main      : #333;
+$text-description: #666;
+$text-subtitle  : #848484;
+
+// USER CENTER
+$gradient-blue    : $cyan, $blue;
+$gradient-gray    : $gray, darken($gray, 15%);
+$gradient-green   : $green, darken($green, 15%);
+$gradient-orange  : $orange, darken($orange, 5%);
+$gradient-red     : $red, darken($red, 15%);
+$gradient-purple  : $purple, darken($purple, 15%);
+$gradient-magenta : $magenta, darken($magenta, 15%);
+$gradient-yellow  : $yellow, darken($yellow, 15%);
+$gradient-time    : #79C1F0, #7E87EF;
+
+
+$radius: 5px;
+
+
+$screen-width-threshold: 500px;
+
+$width-float-btn: 45px; // 悬浮的按钮宽度
