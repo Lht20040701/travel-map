@@ -10,7 +10,7 @@ const LOADING_OPTION = {
     background: "rgba(0, 0, 0, 0.3)"
 }
 
-const BASE_URL: string = process.env.NODE_ENV === 'development' ? '/dev/' : 'http://kylebing.cn/portal/' // 生产环境时是 ../portal
+const BASE_URL: string = process.env.NODE_ENV === 'development' ? '/dev/' : 'http://localhost/portal/' // 生产环境时是 ../portal
 
 function request(
     method: 'get' | 'post' | 'put' | 'delete',
