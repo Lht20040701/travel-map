@@ -110,7 +110,8 @@ export class AIService {
         
         for (const line of lines) {
           if (line.trim()) {
-            onMessage(line)
+            // 为每行添加换行符，除了最后一行
+            onMessage(line + '\n')
           }
         }
       }
@@ -211,7 +212,8 @@ export class AIService {
         
         for (const line of lines) {
           if (line.trim()) {
-            onMessage(line)
+            // 为每行添加换行符，除了最后一行
+            onMessage(line + '\n')
           }
         }
       }

@@ -30,8 +30,10 @@
           </div>
           <div class="message-content">
             <div class="message-bubble">
-              <div class="message-text" v-html="formatMessage(message.content)"></div>
+              <div class="message-text" v-html="formatMessage(message.content, message.type)"></div>
               <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+              <!-- 流式渲染时的⚫符号 -->
+              <span v-if="message.type === 'ai' && isTyping && message.id === getCurrentTypingMessageId()" class="typing-dot">⚫</span>
             </div>
           </div>
           <div class="message-avatar user-avatar" v-if="message.type === 'user'">
@@ -133,6 +135,13 @@
 import { ref, nextTick, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { AIService } from '@/api/aiApi'
+import { marked } from 'marked'
+
+// 配置marked选项
+marked.setOptions({
+  breaks: true, // 支持换行
+  gfm: true, // 支持GitHub风格的markdown
+})
 
 // 消息接口
 interface ChatMessage {
@@ -150,6 +159,7 @@ const isTyping = ref(false)
 const messagesContainer = ref<HTMLElement>()
 const messageInput = ref()
 const useStream = ref(true) // 默认使用流式响应
+const currentTypingMessageId = ref<string | null>(null) // 当前正在输入的消息ID
 
 // 初始化欢迎消息
 onMounted(() => {
@@ -219,6 +229,8 @@ const handleNormalResponse = async (userMessage: string): Promise<void> => {
 const handleStreamResponse = async (userMessage: string): Promise<void> => {
   let aiMessageId = `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` // 确保唯一ID
   let aiContent = '' // 用于累积AI回复内容
+  let isFirstLine = true // 标记是否为第一行
+  let firstLineContent = '' // 存储第一行内容
   
   // 先添加一个空的AI消息
   const aiMessage: ChatMessage = {
@@ -229,6 +241,7 @@ const handleStreamResponse = async (userMessage: string): Promise<void> => {
     reasoning: ''
   }
   messages.value.push(aiMessage)
+  currentTypingMessageId.value = aiMessageId // 设置当前正在输入的消息ID
   console.log('创建AI消息:', aiMessage) // 调试信息
   
   try {
@@ -236,8 +249,17 @@ const handleStreamResponse = async (userMessage: string): Promise<void> => {
       userMessage,
       // onMessage 回调
       (content: string) => {
-        // 累积AI回复内容
-        aiContent += content
+        // 处理第一行（思考内容）
+        if (isFirstLine) {
+          firstLineContent = content.trim()
+          isFirstLine = false
+          // 将第一行格式化为引用风格
+          aiContent = `> ${firstLineContent}\n\n`
+        } else {
+          // 累积后续内容
+          aiContent += content
+        }
+        
         // 更新AI消息内容 - 使用更安全的方式
         const messageIndex = messages.value.findIndex(msg => msg.id === aiMessageId)
         if (messageIndex !== -1) {
@@ -246,7 +268,7 @@ const handleStreamResponse = async (userMessage: string): Promise<void> => {
           if (currentMessage.type === 'ai') {
             messages.value[messageIndex] = {
               ...currentMessage,
-              content: aiContent
+              content: aiContent // 这里aiContent已经包含了正确的换行符和引用格式
             }
             console.log('更新AI消息内容:', messages.value[messageIndex]) // 调试信息
             scrollToBottom()
@@ -270,6 +292,7 @@ const handleStreamResponse = async (userMessage: string): Promise<void> => {
       // onComplete 回调
       () => {
         console.log('AI流式响应完成')
+        currentTypingMessageId.value = null // 清除当前正在输入的消息ID
       }
     )
   } catch (error) {
@@ -297,9 +320,15 @@ const sendQuickMessage = (message: string) => {
   handleSendMessage()
 }
 
-// 格式化消息内容（支持换行）
-const formatMessage = (content: string) => {
-  return content.replace(/\n/g, '<br>')
+// 格式化消息内容（支持markdown渲染）
+const formatMessage = (content: string, type: 'user' | 'ai' = 'user') => {
+  if (type === 'ai') {
+    // AI消息支持markdown渲染
+    return marked(content)
+  } else {
+    // 用户消息只支持换行
+    return content.replace(/\n/g, '<br>')
+  }
 }
 
 // 格式化时间
@@ -308,6 +337,11 @@ const formatTime = (timestamp: Date) => {
     hour: '2-digit', 
     minute: '2-digit' 
   })
+}
+
+// 获取当前正在输入的消息ID
+const getCurrentTypingMessageId = () => {
+  return currentTypingMessageId.value
 }
 
 // 滚动到底部
@@ -473,12 +507,108 @@ const scrollToBottom = () => {
   
   .message-text {
     margin-bottom: 6px;
+    
+    // Markdown样式支持
+    :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
+      margin: 8px 0 4px 0;
+      font-weight: bold;
+      line-height: 1.3;
+    }
+    
+    :deep(h1) { font-size: 1.2em; }
+    :deep(h2) { font-size: 1.1em; }
+    :deep(h3) { font-size: 1.05em; }
+    
+    :deep(p) {
+      margin: 4px 0;
+      line-height: 1.5;
+    }
+    
+    :deep(strong), :deep(b) {
+      font-weight: bold;
+    }
+    
+    :deep(em), :deep(i) {
+      font-style: italic;
+    }
+    
+    :deep(code) {
+      background-color: rgba(0, 0, 0, 0.1);
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    :deep(pre) {
+      background-color: rgba(0, 0, 0, 0.05);
+      padding: 8px 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 8px 0;
+      
+      code {
+        background-color: transparent;
+        padding: 0;
+      }
+    }
+    
+    :deep(ul), :deep(ol) {
+      margin: 4px 0;
+      padding-left: 20px;
+    }
+    
+    :deep(li) {
+      margin: 2px 0;
+    }
+    
+    :deep(blockquote) {
+      border-left: 3px solid $color-main;
+      padding-left: 12px;
+      margin: 8px 0;
+      color: $text-description;
+      font-style: italic;
+    }
+    
+    :deep(a) {
+      color: $color-main;
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+    
+    :deep(table) {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 8px 0;
+    }
+    
+    :deep(th), :deep(td) {
+      border: 1px solid $border-normal;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    
+    :deep(th) {
+      background-color: $bg-light;
+      font-weight: bold;
+    }
   }
   
   .message-time {
     font-size: $fz-small;
     opacity: 0.7;
     text-align: right;
+  }
+  
+  .typing-dot {
+    display: inline-block;
+    margin-left: 4px;
+    color: $color-main;
+    animation: blink 1s infinite;
+    font-size: 14px;
   }
 }
 
@@ -511,6 +641,15 @@ const scrollToBottom = () => {
   40% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
   }
 }
 
