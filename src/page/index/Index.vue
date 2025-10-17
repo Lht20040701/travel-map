@@ -3,7 +3,7 @@
         <div class="index" :style="`height: ${store.windowInsets.height}px; width: ${store.windowInsets.width}`">
             <div class="intro">
                 <h1>路书</h1>
-                <h3>一个可以分享行车路线、地点信息的网站</h3>
+                <h3>一个可以分享行车路线、地点信息、旅游信息的网站</h3>
 
                 <p class="mt-7">在这里，你可以查看别人分享的一些路线 <RouterLink to="/route/route-line">看这</RouterLink>。</p>
 
@@ -12,8 +12,6 @@
                 <p>再有时候，可能需要查看一个市的区、县信息，可以 <RouterLink to="/tool/district-info">看这里</RouterLink>。</p>
                 <p>还有可能，需要查看一个 gpx 路径是怎样的，可以 <RouterLink to="/gpx/gpx-viewer">看这里</RouterLink>。</p>
                 <p>如果要查看一个 gpx 的 3D 路径，可以 <RouterLink to="/gpx/gpx-viewer-3d">看这里</RouterLink>。</p>
-
-                <p class="mt-5">另外，该项目是开源的，可以从这里查看 <a target="_blank" href="https://github.com/KyleBing/map">https://github.com/KyleBing/map</a>。</p>
             </div>
         </div>
     </div>

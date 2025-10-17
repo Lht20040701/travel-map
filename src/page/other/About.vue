@@ -7,24 +7,15 @@
                     <h2>{{ projectName }}</h2>
                 </div>
                 <div class="about-content markdown" v-html="aboutHtmlContent"></div>
-
-                <p class="description">请将疑问和建议发送邮件至： <i class="el-icon-message"></i>  <a :href="`mailto:${email}`">{{ email }}</a>
-                </p>
-                <p>我的主页： <i class="el-icon-house"></i> <a :href="homepage">{{ homepage }}</a></p>
             </div>
         </div>
     </div>
 </template>
 <script lang="ts" setup>
-import packageInfo from "../../../package.json"
-import {AnimateHeartCanvas} from "animate-heart-canvas/animate-heart-canvas";
 import {marked} from "marked";
-import {onMounted, onUnmounted, ref} from "vue";
+import {onMounted, ref} from "vue";
 
 const projectName = '路书'
-const email = packageInfo.author.email
-let animatedBg = null
-const homepage = packageInfo.author.homepage
 const aboutMarkdownContent = `
 #####  一个可以分享行车路线、地域信息的网站
 建议电脑端浏览该网站
@@ -57,20 +48,7 @@ const aboutMarkdownContent = `
 const aboutHtmlContent = ref('')
 
 onMounted(() => {
-    animatedBg =
-        new AnimateHeartCanvas(
-            0,
-            360,
-            30,
-            30,
-            800,
-            ''
-        )
     aboutHtmlContent.value = marked.parse(aboutMarkdownContent)
-})
-
-onUnmounted(() => {
-    animatedBg.destroy()
 })
 
 </script>
