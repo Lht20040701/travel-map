@@ -93,13 +93,13 @@ const FIXED_ROUTES: Array<RouteRecordRaw> = [
         ]
     },
     {
-        name: 'AboutFramework',
-        path: '/about',
+        name: 'AI',
+        path: '/ai',
         component: Layout,
-        redirect: '/about/about',
-        meta: {title: '关于', showInMenu: true, icon: 'ChatDotRound'},
+        meta: {title: 'AI助手', showInMenu: true, icon: 'ChatDotRound'},
         children: [
-            {name: 'About', path: 'about', meta: {isAdmin: false, title: '关于', showInMenu: false, icon: 'el-icon-warning-outline',}, component: () => import('./page/other/About.vue')},
+            {name: 'AiChat', path: 'chat', meta: {title: 'AI聊天', showInMenu: true, icon: 'ChatDotRound'}, component: () => import('./page/ai/AiChat.vue')},
+            {name: 'ImageAnalysis', path: 'image-analysis', meta: {title: '图片分析', showInMenu: true, icon: 'Picture'}, component: () => import('./page/ai/ImageAnalysis.vue')},
         ]
     },
     {
