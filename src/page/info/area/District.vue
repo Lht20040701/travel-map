@@ -60,7 +60,7 @@ let layerCity = null // 区域图层
 
 const isLoading = ref(false)
 const pointerInfo = ref({
-    name: '济南市',
+    name: '濮阳市',
     // area: '',
     note: '',
     adcode: ''
@@ -74,7 +74,7 @@ onMounted(() => {
         let adcodeInfo = adcodeMap.get(pointerInfo.value.adcode)
         pointerInfo.value.name = adcodeInfo[0]
     } else {
-        pointerInfo.value.name = route.query.city || '济南'
+        pointerInfo.value.name = route.query.city || '濮阳'
     }
 
     AMapLoader
@@ -96,8 +96,8 @@ onMounted(() => {
         .then(mapItem => {
             AMap = mapItem
             map = new AMap.Map('container', {
-                center: [117.129533, 36.685668],
-                zoom: 9, // 缩放级别
+                center: [115.049917,35.78337],
+                zoom: 10, // 缩放级别
                 mapStyle: 'amap://styles/whitesmoke'
             })
 
