@@ -99,7 +99,7 @@ const store = useProjectStore()
 const route = useRoute()
 const router = useRouter()
 
-const MY_POSITION = [117.129533, 36.685668]
+const MY_POSITION = [114.006333,33.010228]
 let AMap = null
 let map = null
 let loca = null // LOCA
@@ -172,7 +172,7 @@ onMounted(() => {
             AMap = mapItem
             map = new AMap.Map('container', {
                 viewMode: '3D',
-                zoom: 20,
+                zoom: 18,
                 pitch: 32,
                 center: MY_POSITION,
                 // mapStyle: 'amap://styles/grey',

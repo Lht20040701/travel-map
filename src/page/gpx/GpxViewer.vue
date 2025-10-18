@@ -94,7 +94,7 @@ import {useRoute, useRouter} from "vue-router";
 const store = useProjectStore()
 const route = useRoute()
 
-const MY_POSITION = [117.129533, 36.685668]
+const MY_POSITION = [114.006333,33.010228]
 let AMap = null
 let map = null
 
@@ -148,7 +148,7 @@ onMounted(() => {
                 viewMode: '3D', //地图模式
                 rotateEnable: true, //是否开启地图旋转交互 鼠标右键 + 鼠标画圈移动 或 键盘Ctrl + 鼠标左键画圈移动
                 pitchEnable: true, //是否开启地图倾斜交互 鼠标右键 + 鼠标上下移动或键盘Ctrl + 鼠标左键上下移动
-                zoom: 11
+                zoom: 18
             })
             map.addControl(new AMap.ToolBar())
             map.addControl(new AMap.Scale())

@@ -51,7 +51,7 @@ const store = useProjectStore()
 const route = useRoute()
 const router = useRouter()
 
-const MY_POSITION = [117.129533, 36.685668]
+const MY_POSITION = [114.006333,33.010228]
 let AMap: any = null
 let cluster: any = null  // 点聚合的对象
 
@@ -87,7 +87,7 @@ onMounted(() => {
             AMap = mapItem
             window.map = new AMap.Map('container', {
                 center: MY_POSITION,
-                zoom: 11
+                zoom: 18
             })
             window.map.addControl(new AMap.ToolBar())
             window.map.addControl(new AMap.Scale())

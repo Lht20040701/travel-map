@@ -44,7 +44,7 @@ import {EntityRoute, EntityRoutePoint} from "@/page/route/Route.ts";
 import routeApi from "@/api/routeApi.ts";
 import {generateMarkerContent} from "@/page/MyMapLib.ts";
 
-const MY_POSITION = [117.129533, 36.685668]
+const MY_POSITION = [114.006333,33.010228] // 该界面的初始经纬度坐标
 
 let AMap = null
 let currentDragRouting = null  // 当前导航路线
@@ -92,7 +92,7 @@ onMounted(() => {
             AMap = mapItem
             window.map = new AMap.Map('container', {
                 center: MY_POSITION,
-                zoom: 11
+                zoom: 18
             })
             window.map.addControl(new AMap.ToolBar())
             window.map.addControl(new AMap.Scale())

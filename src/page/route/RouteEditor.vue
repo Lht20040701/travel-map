@@ -132,7 +132,7 @@ declare global {
 const store = useProjectStore()
 const route = useRoute()
 
-const MY_POSITION = [117.129533, 36.685668]
+const MY_POSITION = [114.006333,33.010228]
 let AMap: any = null
 
 let activeLineObj = ref<any>(null)
@@ -223,7 +223,7 @@ onMounted(() => {
 
             window.map = new AMap.Map('container', {
                 center: MY_POSITION,
-                zoom: 11
+                zoom: 18
             })
 
             // map.addControl(new AMap.ToolBar())
