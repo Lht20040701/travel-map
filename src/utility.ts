@@ -12,7 +12,7 @@ interface EntityAuthorization {
     geolocation: string
 }
 
-// 设置 authorization
+// 设置 authorization：把用户信息塞到 localStorage 中
 function setAuthorization(nickname: string, uid: number, email: string, phone: string, avatar: string, token: string, group_id: number, city: string, geolocation: string) {
     localStorage.setItem(AUTHORIZATION_NAME, JSON.stringify({
         nickname, uid, email, phone, avatar, token, group_id, city, geolocation
