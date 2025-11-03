@@ -103,6 +103,17 @@ const FIXED_ROUTES: Array<RouteRecordRaw> = [
         ]
     },
     {
+        name: 'Forum',
+        path: '/forum',
+        component: Layout,
+        redirect: '/forum/list',
+        meta: {title: '论坛讨论', showInMenu: true, icon: 'ChatLineRound'},
+        children: [
+            {name: 'ForumList', path: 'list', meta: {title: '论坛列表', showInMenu: true, icon: 'List'}, component: () => import('./page/forum/ForumList.vue')},
+            {name: 'ForumDetail', path: 'detail', meta: {title: '主题详情', showInMenu: false, icon: 'Document'}, component: () => import('./page/forum/ForumDetail.vue')},
+        ]
+    },
+    {
         name: 'Logout', path: '/logout',
         meta: {title: '退出登录', showInMenu: false, icon: 'BottomRight',},
         component: Logout,
