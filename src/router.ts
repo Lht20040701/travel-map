@@ -114,6 +114,15 @@ const FIXED_ROUTES: Array<RouteRecordRaw> = [
         ]
     },
     {
+        name: 'ImageFall',
+        path: '/imageFall',
+        component: Layout,
+        meta: {title: '瀑布图', showInMenu: true, icon: 'ChatLineRound'},
+        children: [
+            {name: 'ImageFall', path: 'show', meta: {title: '瀑布图', showInMenu: true, icon: 'List'}, component: () => import('./page/imageFall/ImageFall.vue')},
+        ]
+    },
+    {
         name: 'Logout', path: '/logout',
         meta: {title: '退出登录', showInMenu: false, icon: 'BottomRight',},
         component: Logout,

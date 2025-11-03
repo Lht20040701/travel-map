@@ -17,6 +17,7 @@
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",
     "@element-plus/icons-vue": "^2.1.0",
+    "@lhlyu/vue-virtual-waterfall": "^1.0.8",
     "animate-bg-canvas": "^0.1.2",
     "animate-heart-canvas": "^0.1.9",
     "axios": "^1.6.3",
