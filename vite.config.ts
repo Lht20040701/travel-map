@@ -27,8 +27,8 @@ export default defineConfig({
     server: {
         proxy: {
             '/dev': {
-                target: 'http://localhost:3000/', // nodejs后端
-                // target: 'http://localhost:3001/', // spring后端
+                // target: 'http://localhost:3000/', // nodejs后端
+                target: 'http://localhost:3001/', // spring后端
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/dev/, '/'),
             },
