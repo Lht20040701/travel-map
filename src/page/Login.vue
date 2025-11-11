@@ -97,7 +97,8 @@ function login() {
                 res.data.phone,
                 res.data.avatar,
                 res.data.password,
-                res.data.group_id,
+                // res.data.group_id, 后端传的是小驼峰，不清楚改了这里以后会不会影响到别的部分
+                res.data.groupId,
                 res.data.city,
                 res.data.geolocation,
             )

@@ -123,6 +123,16 @@ const FIXED_ROUTES: Array<RouteRecordRaw> = [
         ]
     },
     {
+        name: 'InviteCode',
+        path: '/invite-code',
+        component: Layout,
+        redirect: '/invite-code/list',
+        meta: {title: '邀请码管理', showInMenu: true, icon: 'Key', isAdmin: true},
+        children: [
+            {name: 'InviteCodeList', path: 'list', meta: {title: '邀请码列表', showInMenu: true, icon: 'List'}, component: () => import('./page/invite/InviteCodeList.vue')},
+        ]
+    },
+    {
         name: 'Logout', path: '/logout',
         meta: {title: '退出登录', showInMenu: false, icon: 'BottomRight',},
         component: Logout,
