@@ -114,7 +114,6 @@ const FIXED_ROUTES: Array<RouteRecordRaw> = [
         ]
     },
     {
-        name: 'ImageFall',
         path: '/imageFall',
         component: Layout,
         meta: {title: '瀑布图', showInMenu: true, icon: 'ChatLineRound'},
