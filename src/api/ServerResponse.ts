@@ -1,7 +1,7 @@
-interface ServerResponse{
+interface ServerResponse<T>{
     message: string,
     success: boolean,
-    data: any
+    data: T
 }
 
 export {

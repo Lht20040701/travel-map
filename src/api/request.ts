@@ -14,13 +14,13 @@ const LOADING_OPTION = {
 const BASE_URL: string = process.env.NODE_ENV === 'development' ? '/dev/' : 'http://localhost/portal/' // 生产环境时是 ../portal
 
 // 再封装axios
-function request(
+function request<T> (
     method: 'get' | 'post' | 'put' | 'delete',              // 请求方式
     params: any,                                            // url参数
     requestData: any,                                       // 请求体数据
     showLoading = false,                           // 是否显示加载层
     url: string                                             // 请求地址
-): Promise<ServerResponse> {
+): Promise<ServerResponse<T>> {
     let layerLoading = null
     // 加载遮罩层-ElLoading 来自 element-plus：https://element-plus.org/zh-CN/component/loading
     if (showLoading) layerLoading = ElLoading.service(LOADING_OPTION)
