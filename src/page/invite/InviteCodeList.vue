@@ -77,6 +77,7 @@ import {useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
 import FooterPagination from "@/layout/FooterPagination.vue";
 import Toolbar from "@/layout/Toolbar.vue";
+import inviteApi from "@/api/inviteApi.ts"
 
 const store = useProjectStore()
 const router = useRouter()
@@ -126,84 +127,26 @@ function pageChange() {
 // 获取邀请码列表
 function getInviteCodeList() {
     isLoading.value = true
-    
-    // TODO: 这里先使用假数据，后续替换为真实接口
-    // 模拟接口延迟
-    setTimeout(() => {
-        // 假数据
-        const mockData: InviteCode[] = [
-            {
-                id: 'INVITE-2024-001',
-                dateCreate: dateFormatter(new Date('2024-01-15 10:30:00'), 'yyyy/MM/dd hh:mm:ss'),
-                dateRegister: dateFormatter(new Date('2024-01-20 14:25:00'), 'yyyy/MM/dd hh:mm:ss'),
-                bindingUid: 1001
-            },
-            {
-                id: 'INVITE-2024-002',
-                dateCreate: dateFormatter(new Date('2024-02-10 09:15:00'), 'yyyy/MM/dd hh:mm:ss'),
-                dateRegister: null,
-                bindingUid: null
-            },
-            {
-                id: 'INVITE-2024-003',
-                dateCreate: dateFormatter(new Date('2024-02-18 16:45:00'), 'yyyy/MM/dd hh:mm:ss'),
-                dateRegister: dateFormatter(new Date('2024-02-25 11:20:00'), 'yyyy/MM/dd hh:mm:ss'),
-                bindingUid: 1003
-            },
-            {
-                id: 'INVITE-2024-004',
-                dateCreate: dateFormatter(new Date('2024-03-05 13:00:00'), 'yyyy/MM/dd hh:mm:ss'),
-                dateRegister: null,
-                bindingUid: null
-            },
-            {
-                id: 'INVITE-2024-005',
-                dateCreate: dateFormatter(new Date('2024-03-12 08:30:00'), 'yyyy/MM/dd hh:mm:ss'),
-                dateRegister: dateFormatter(new Date('2024-03-15 15:10:00'), 'yyyy/MM/dd hh:mm:ss'),
-                bindingUid: 1005
-            }
-        ]
-
-        // 如果有搜索关键字，进行过滤
-        let filteredData = mockData
-        if (formSearch.value.keyword) {
-            const keyword = formSearch.value.keyword.toLowerCase()
-            filteredData = mockData.filter(item => 
-                item.id.toLowerCase().includes(keyword) ||
-                (item.bindingUid && item.bindingUid.toString().includes(keyword))
-            )
-        }
-
-        // 分页处理
-        const start = (pager.value.pageNo - 1) * pager.value.pageSize
-        const end = start + pager.value.pageSize
-        tableData.value = filteredData.slice(start, end)
-        pager.value.total = filteredData.length
-
-        isLoading.value = false
-    }, 300) // 模拟网络延迟
-
-    // TODO: 真实接口调用示例
-    // inviteCodeApi
-    //     .list({
-    //         pageNo: pager.value.pageNo,
-    //         pageSize: pager.value.pageSize,
-    //         keyword: formSearch.value.keyword
-    //     })
-    //     .then(res => {
-    //         isLoading.value = false
-    //         pager.value = res.data.pager
-    //         tableData.value = res.data.list.map(item => {
-    //             item.dateCreate = dateFormatter(new Date(item.dateCreate), 'yyyy/MM/dd hh:mm:ss')
-    //             if (item.dateRegister) {
-    //                 item.dateRegister = dateFormatter(new Date(item.dateRegister), 'yyyy/MM/dd hh:mm:ss')
-    //             }
-    //             return item
-    //         })
-    //     })
-    //     .catch(err => {
-    //         isLoading.value = false
-    //     })
+    inviteApi
+        .list({
+            pageNo: pager.value.pageNo,
+            pageSize: pager.value.pageSize,
+            keyword: formSearch.value.keyword
+        })
+        .then(res => {
+            isLoading.value = false
+            pager.value = res.data.pager
+            tableData.value = res.data.list.map(item => {
+                item.dateCreate = dateFormatter(new Date(item.dateCreate), 'yyyy/MM/dd hh:mm:ss')
+                if (item.dateRegister) {
+                    item.dateRegister = dateFormatter(new Date(item.dateRegister), 'yyyy/MM/dd hh:mm:ss')
+                }
+                return item
+            })
+        })
+        .catch(err => {
+            isLoading.value = false
+        })
 }
 </script>
 

@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import {EntityAuthorization} from "@/utility.ts";
+import { EntityAuthorization } from "@/utility.ts";
 
 export const useProjectStore = defineStore('storeProject', {
     state: ()=>({
@@ -25,6 +25,7 @@ export const useProjectStore = defineStore('storeProject', {
         isInPortraitMode (state) {
             return state.windowInsets.height > state.windowInsets.width
         },
+        // 根据localStorage中存储的数据来判断是否是管理员账号，如果是管理员的话
         isAdmin (state) {
             return state.authorization && state.authorization.group_id === 1
         },
