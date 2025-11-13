@@ -29,7 +29,7 @@
 import AMapLoader from '@amap/amap-jsapi-loader'
 import PointerDetailPanel from "./components/PointerDetailPanel.vue"
 import {key_web_js} from "@/mapConfig";
-import pointerApi from "@/api/pointerApi";
+import pointerApi, {ListRequest} from "@/api/pointerApi";
 
 import {Base64} from "js-base64"
 import PointerListPanel from "./components/PointerListPanel.vue";
@@ -136,7 +136,7 @@ function openInGaodeApp(){
 // 获取点图列表
 function getPointerList() {
     isLoading.value = true
-    let requestData = {
+    let requestData: ListRequest = {
         pageNo: pager.value.pageNo,
         pageSize: pager.value.pageSize
     }
