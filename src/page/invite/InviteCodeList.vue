@@ -77,13 +77,14 @@ import {useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
 import FooterPagination from "@/layout/FooterPagination.vue";
 import Toolbar from "@/layout/Toolbar.vue";
-import inviteApi from "@/api/inviteApi.ts"
+import inviteApi, {type InviteListResponse, type Invitations} from "@/api/inviteApi.ts"
+import {type ServerResponse} from "@/api/ServerResponse.ts";
 
 const store = useProjectStore()
 const router = useRouter()
 
 const isLoading = ref(false)
-const tableData = ref([])
+const tableData = ref<Invitations[]>([])
 
 // pager
 const pager = ref({
@@ -133,7 +134,7 @@ function getInviteCodeList() {
             pageSize: pager.value.pageSize,
             keyword: formSearch.value.keyword
         })
-        .then(res => {
+        .then((res: ServerResponse<InviteListResponse>) => {
             isLoading.value = false
             pager.value = res.data.pager
             tableData.value = res.data.list.map(item => {

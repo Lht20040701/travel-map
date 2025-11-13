@@ -1,26 +1,26 @@
 import {request} from './request'
 import {ServerResponse} from "@/api/ServerResponse.ts";
 
-interface Pager {
+export interface Pager {
     pageNo: number;
     pageSize: number;
     total: number;
 }
 
-interface Invitations {
+export interface Invitations {
     id: string,
     dateCreate: string,
     dateRegister: string,
     bindingUid: number,
 }
 
-interface InviteListRequest {
+export interface InviteListRequest {
     pageNo: number,
     pageSize: number,
     keyword: string
 }
 
-type InviteListResponse = {
+export type InviteListResponse = {
     list: Invitations[],
     pager: Pager
 }
