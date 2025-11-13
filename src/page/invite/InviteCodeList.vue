@@ -31,7 +31,7 @@
                 >
                     <ElTableColumn width="200" prop="id" label="邀请码">
                         <template #default="scope">
-                            <ElTag type="info" size="large">{{ scope.row.id }}</ElTag>
+                            <ElTag type="primary" size="large">{{ scope.row.id }}</ElTag>
                         </template>
                     </ElTableColumn>
                     <ElTableColumn width="180" align="center" prop="dateCreate" label="创建时间">
