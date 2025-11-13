@@ -152,7 +152,7 @@ import {computed, onMounted, reactive, ref} from "vue";
 import {useRouter} from "vue-router";
 import {ElMessageBox, ElNotification, FormRules} from "element-plus";
 import Toolbar from "@/layout/Toolbar.vue";
-import pointerApi from "@/api/pointerApi";
+import pointerApi, {AddRequest} from "@/api/pointerApi";
 import FooterPagination from "@/layout/FooterPagination.vue";
 import {EntityPointer} from "@/page/pointer/Pointer.ts";
 
@@ -297,7 +297,7 @@ function pointerModifySubmit() {
 // 新增
 function pointerNewSubmit() {
     // 为了断开最终数据与 formPointer 的关联
-    let requestData = {}
+    let requestData: AddRequest = {} as AddRequest
     Object.assign(requestData, formPointer.value)
     requestData.pointers = Base64.encode(formPointer.value.pointers)
     pointerApi

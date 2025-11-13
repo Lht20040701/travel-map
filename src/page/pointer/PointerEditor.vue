@@ -88,7 +88,7 @@ import AMapLoader from '@amap/amap-jsapi-loader';
 import PointerEditPanel from "./components/PointerEditPanel.vue";
 import {key_service, key_web_js} from "@/mapConfig";
 import axios from "axios";
-import pointerApi from "@/api/pointerApi";
+import pointerApi, {AddRequest} from "@/api/pointerApi";
 import {Base64} from "js-base64";
 import {useProjectStore} from "@/pinia";
 import {getAuthorization} from "@/utility";
@@ -257,7 +257,7 @@ function pointerNewSubmit() {
         ElMessage.warning('没有添加任何点位')
         return
     }
-    let requestData = {}
+    let requestData: AddRequest = {} as AddRequest
     Object.assign(requestData, formPointer.value)
     requestData.pointers = Base64.encode(JSON.stringify(pointers.value))
     pointerApi
