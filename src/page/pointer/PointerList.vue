@@ -152,7 +152,7 @@ import {computed, onMounted, reactive, ref} from "vue";
 import {useRouter} from "vue-router";
 import {ElMessageBox, ElNotification, FormRules} from "element-plus";
 import Toolbar from "@/layout/Toolbar.vue";
-import pointerApi, {AddRequest} from "@/api/pointerApi";
+import pointerApi, {AddRequest, MapPointerAndUser} from "@/api/pointerApi";
 import FooterPagination from "@/layout/FooterPagination.vue";
 import {EntityPointer} from "@/page/pointer/Pointer.ts";
 
@@ -163,7 +163,7 @@ const refForm = ref()
 
 const isLoading = ref(false)
 const editingPointerId = ref(null)
-const tableData = ref([])
+const tableData = ref<MapPointerAndUser[]>([])
 const isShowDialogEdit = ref(false) // modal show or not
 
 const formPointer = ref<EntityPointer>({
@@ -316,6 +316,14 @@ function pointerNewSubmit() {
         })
 }
 
+declare module '@/api/pointerApi' {
+  interface MapPointerAndUser {
+    pointerArray: string[],
+    date_create: string,
+    date_modify: string
+  }
+}
+
 // 获取点图列表
 function getPointerList() {
     isLoading.value = true
@@ -330,7 +338,7 @@ function getPointerList() {
         .then(res => {
             isLoading.value = false
             pager.value = res.data.pager
-            tableData.value = res.data.list.map(item => {
+            tableData.value = res.data.list.map((item: MapPointerAndUser) => {
                 try  {
                     item.pointers = Base64.decode(item.pointers) || '[]'
                     item.pointerArray = JSON.parse(item.pointers)

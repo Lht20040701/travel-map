@@ -1,11 +1,7 @@
 import {request} from './request'
 import {ServerResponse} from "@/api/ServerResponse.ts";
+import {Pager} from "@/api/Pager.ts";
 
-export interface Pager {
-    pageNo: number;
-    pageSize: number;
-    total: number;
-}
 
 export interface Invitations {
     id: string,
