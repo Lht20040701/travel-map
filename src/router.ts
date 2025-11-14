@@ -93,16 +93,6 @@ const FIXED_ROUTES: Array<RouteRecordRaw> = [
         ]
     },
     {
-        name: 'AI',
-        path: '/ai',
-        component: Layout,
-        meta: {title: 'AI助手', showInMenu: true, icon: 'ChatDotRound'},
-        children: [
-            {name: 'AiChat', path: 'chat', meta: {title: 'AI聊天', showInMenu: true, icon: 'ChatDotRound'}, component: () => import('./page/ai/AiChat.vue')},
-            {name: 'ImageAnalysis', path: 'image-analysis', meta: {title: '图片分析', showInMenu: true, icon: 'Picture'}, component: () => import('./page/ai/ImageAnalysis.vue')},
-        ]
-    },
-    {
         name: 'Forum',
         path: '/forum',
         component: Layout,
