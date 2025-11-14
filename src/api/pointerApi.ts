@@ -32,6 +32,33 @@ export interface MapPointerAndUser {
     username: string,
 }
 
+export interface ModifyPointer {
+    img: string;
+    name: string;
+    note: string;
+    position: number[];
+}
+
+export interface ModifyRequest {
+    area: string;
+    date_create: string;
+    date_modify: string;
+    id: number;
+    is_public: number;
+    name: string;
+    nickname?: string;
+    note: string;
+    pointerArray?: ModifyPointer[];
+    pointers: string;
+    thumb_up: number;
+    uid: number;
+    username?: string;
+    video_link?: string;
+    wx?: string;
+}
+
+export type ModifyResponse = string
+
 export interface ListRequest {
     dateRange?: string[];
     keyword?: string;
@@ -51,7 +78,7 @@ export default {
     list(requestData: ListRequest): Promise<ServerResponse<ListResponse>>  {
         return request('post', null, requestData, false, 'map-pointer/list')
     },
-    modify(requestData) {
+    modify(requestData: ModifyRequest): Promise<ServerResponse<ModifyResponse>> {
         return request('put', null, requestData, false, 'map-pointer/modify')
     },
     delete(requestData) {
