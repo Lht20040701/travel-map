@@ -8,7 +8,7 @@
                 <div class="search-bar">
                     <ElForm inline>
                         <ElFormItem label="关键字" class="ml-4">
-                            <ElInput clearable placeholder="搜索邀请码或用户ID" v-model="formSearch.keyword"></ElInput>
+                            <ElInput clearable placeholder="搜索邀请码或被绑定用户ID" v-model="formSearch.keyword"></ElInput>
                         </ElFormItem>
                         <ElFormItem>
                             <ElButton type="primary" @click="search" icon="Filter">查询</ElButton>
