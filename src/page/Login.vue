@@ -23,6 +23,7 @@
             </ElForm>
             <div class="register-link">
                 <RouterLink to="register">注册</RouterLink>
+                <span @click="fillDemoAccount">演示账户</span>
             </div>
         </div>
     </div>
@@ -30,7 +31,7 @@
 
 <script lang="ts" setup>
 import {onMounted, onUnmounted, reactive, ref, watch} from "vue";
-import {useProjectStore} from "@/pinia.ts";
+import {useProjectStore} from "@/store.ts";
 import {useRouter} from "vue-router";
 import {ElMessage, FormRules} from "element-plus";
 import {getAuthorization, setAuthorization} from "@/utility.ts";
@@ -97,8 +98,7 @@ function login() {
                 res.data.phone,
                 res.data.avatar,
                 res.data.password,
-                // res.data.group_id, 后端传的是小驼峰，不清楚改了这里以后会不会影响到别的部分
-                res.data.groupId,
+                res.data.group_id,
                 res.data.city,
                 res.data.geolocation,
             )
@@ -110,6 +110,10 @@ function login() {
         .catch(() => {
             isInLoginProcess.value = false
         })
+}
+function fillDemoAccount() {
+    formLogin.value.email = 'test@163.com'
+    formLogin.value.password = 'test'
 }
 </script>
 
@@ -159,6 +163,8 @@ function login() {
 }
 
 .register-link{
+    display: flex;
+    justify-content: space-between;
     font-size: 13px;
     text-align: center;
 }

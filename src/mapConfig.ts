@@ -1,5 +1,5 @@
-const key_web_js = '511a7ace139f9332a83c64086d925618' // web js key
-const key_service = '1a6301adcd7795fc0bb502ee5d776852'  // web服务 key
+const key_web_js = '5fb96da561248731451bdd61d12a08ce' // web js key
+const key_service = '15f0ccd68462874d97e7efb44d76aa89'  // web服务 key
 // 管理地址在：https://console.amap.com/dev/key/app
 
 // 七牛云 与 《标题日记》共用一个 仓库

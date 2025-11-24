@@ -88,7 +88,7 @@ import ICON from "@/assets/icons";
 
 import Moment from "moment"
 import { colors } from "@/lib/colors";
-import {useProjectStore} from "@/pinia";
+import {useProjectStore} from "@/store.ts";
 import {useRoute, useRouter} from "vue-router";
 import {computed, onMounted, onUnmounted, ref, watch} from "vue";
 
@@ -172,7 +172,6 @@ onMounted(() => {
             AMap = mapItem
             map = new AMap.Map('container', {
                 viewMode: '3D',
-                zoom: 18,
                 pitch: 32,
                 center: MY_POSITION,
                 // mapStyle: 'amap://styles/grey',

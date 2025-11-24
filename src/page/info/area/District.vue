@@ -1,8 +1,16 @@
 <template>
-    <div class="map-container">
-        <PointerDetailPanel :pointer="pointerInfo"/>
+    <div class="map-container" v-if="isShowToolPanel">
+        <DetailPanel
+            :title="pointerInfo.name"
+            :markdownNote="pointerInfo.note"
+            :isShowQr="false"
+        >
+            <template #footer>
+                <ElButton size="small" type="primary" icon="Hide" @click="hideEverythingForScreenshot">截图用，隐藏面板</ElButton>
+            </template>
+        </DetailPanel>
         <div id="container" :style="`height: ${store.windowInsets.height}px`"></div>
-        <div class="card input-panel">
+        <div class="card input-panel" v-if="isShowToolPanel">
             <ElForm inline size="small">
                 <ElFormItem class="mb-0 mr-1">
                     <ElInput placeholder="区域编码" v-model="pointerInfo.adcode"/>
@@ -20,16 +28,20 @@ import AMapLoader from '@amap/amap-jsapi-loader'
 import axios from "axios";
 import PointerDetailPanel from "@/page/pointer/components/PointerDetailPanel.vue";
 import {adcodeMap} from './adcodeMap'
-import {useProjectStore} from "@/pinia";
+import {useProjectStore} from "@/store.ts";
 
 import {onMounted, onUnmounted, ref, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
 import {key_service, key_web_js} from "@/mapConfig.ts";
+import DetailPanel from "@/layout/DetailPanel.vue";
 
 const store = useProjectStore()
 const router = useRouter()
 const route = useRoute()
+
+const isShowToolPanel = ref(true)
+const isLabelVisible = ref(true)
 
 // 显示地图行政区的深度
 const DEPTH = {
@@ -66,6 +78,8 @@ const pointerInfo = ref({
     adcode: ''
 })
 let tempColorArray = []
+
+const markers = ref<Array<any>>([])
 
 
 onMounted(() => {
@@ -107,11 +121,12 @@ onMounted(() => {
                 showDistrictInfoOf(event.lnglat)
             })
 
-            map.setFeatures(['bg', 'point', 'road', 'building'])
+            map.setFeatures(['bg', 'point', 'road', 'building', 'label'])
             // bg 区域面
             // point 兴趣点
             // road 道路和道路标记
             // building 建筑物
+            // label 标签（地名、路名等文字信息）
 
             // map.addControl(new AMap.ToolBar())
             map.addControl(new AMap.Scale())
@@ -172,6 +187,7 @@ function showDistrictOfAdcode(){
 
 // 获取坐标值的地理信息
 function showDistrictInfoOf(lnglat){
+    isShowToolPanel.value = true
     axios({
         url: 'https://restapi.amap.com/v3/geocode/regeo?parameters',
         params: {
@@ -408,6 +424,40 @@ function addMarker(map, item) {
                </div>`,
     })
     map.add(marker)
+    markers.value.push(marker)
+}
+
+function hideEverythingForScreenshot(){
+    markers.value.forEach(item => {
+        map.remove(item)
+    })
+    markers.value = []
+    isShowToolPanel.value = false
+}
+
+function toggleToolPanel(){
+    isShowToolPanel.value = !isShowToolPanel.value
+}
+
+function toggleMapLabels(){
+    if (map) {
+        isLabelVisible.value = !isLabelVisible.value
+        if (isLabelVisible.value) {
+            // 显示所有 markers
+            markers.value.forEach(marker => {
+                if (marker && marker.show) {
+                    marker.show()
+                }
+            })
+        } else {
+            // 隐藏所有 markers
+            markers.value.forEach(marker => {
+                if (marker && marker.hide) {
+                    marker.hide()
+                }
+            })
+        }
+    }
 }
 
 onUnmounted(() => {
@@ -435,6 +485,7 @@ onUnmounted(() => {
         margin: 0 5px 0 0;
     }
 }
+
 
 
 </style>
