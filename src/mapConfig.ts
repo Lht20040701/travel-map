@@ -4,7 +4,7 @@ const key_service = '15f0ccd68462874d97e7efb44d76aa89'  // web服务 key
 
 // 七牛云 与 《标题日记》共用一个 仓库
 // 地址： https://portal.qiniu.com/kodo/overview
-const qiniu_img_base_url = 'http://t45y867uw.hb-bkt.clouddn.com/' // 空间域名，最后面带 `/`
+const qiniu_img_base_url = 'http://cnd.ilovelihaotian.icu/' // 空间域名，最后面带 `/`
 const qiniu_bucket_name = 'travel-map-pointer-images' // 七牛云对象存储空间的名称
 const thumbnail200_suffix = 'thumbnail_200px' // 七牛云缩略图样式名  200x200px 质量75
 const thumbnail600_suffix = 'thumbnail_600px' // 七牛云缩略图样式名  600x600px 质量75

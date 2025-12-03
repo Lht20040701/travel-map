@@ -25,8 +25,10 @@ function generateMarkerContent(
                   <div class="marker-content">
                        <div class="note">${note.replace(/\n/g, '<br>')}</div>
                        <div class="view">
-                           <a target="_blank" href="${img + '-' + thumbnail1500_suffix}">
-                              <img src="${img + '-' + thumbnail1000_suffix}" alt="view">
+<!--                       <a target="_blank" href="${img + '-' + thumbnail1500_suffix}">-->
+                           <a target="_blank" href="${img}">
+<!--                          <img src="${img + '-' + thumbnail1000_suffix}" alt="view">-->
+                              <img src="${img}" alt="view">
                            </a>
                        </div>
                   </div>
@@ -40,8 +42,10 @@ function generateMarkerContent(
                   </div>
                   <div class="marker-content">
                        <div class="view">
-                           <a target="_blank" href="${img + '-' + thumbnail1500_suffix}">
-                              <img src="${img + '-' + thumbnail1000_suffix}" alt="view">
+<!--                       <a target="_blank" href="${img + '-' + thumbnail1500_suffix}">-->
+                           <a target="_blank" href="${img}">
+<!--                          <img src="${img + '-' + thumbnail1000_suffix}" alt="view">-->
+                              <img src="${img}" alt="view">
                            </a>
                        </div>
                   </div>

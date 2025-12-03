@@ -26,6 +26,7 @@
 import { VirtualWaterfall } from '@lhlyu/vue-virtual-waterfall'
 import Card from './Card.vue'
 import useWaterfall from './useWaterfall.ts'
+import { ItemOption } from "@/page/imageFall/imageFallInterface.ts"
 
 const { waterfallOption, data, calcItemHeight } = useWaterfall()
 </script>

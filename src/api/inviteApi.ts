@@ -1,6 +1,6 @@
 import {request} from './request'
-import {ServerResponse} from "@/api/ServerResponse.ts";
-import {Pager} from "@/api/Pager.ts";
+import {ServerResponse} from "@/api/ServerResponse.ts"
+import {Pager} from "@/api/Pager.ts"
 
 
 export interface Invitations {
