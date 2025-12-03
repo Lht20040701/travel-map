@@ -27,23 +27,27 @@ let layerCity = null // 区域图层
 const isLoading = ref(false)
 
 
+// 车牌信息，参考：https://www.converts.cn/carid.html
 const provinceMarkers = [
-    {"name": "D", "position": [117.37981, 34.94708], "note": "枣庄"},
-    {"name": "H", "position": [116.582207, 35.434777], "note": "济宁"},
-    {"name": "R", "position": [115.721485, 35.158462], "note": "菏泽"},
-    {"name": "L", "position": [119.14716, 35.612242], "note": "日照"},
-    {"name": "Q", "position": [118.194627, 35.317809], "note": "临沂"},
-    {"name": "J", "position": [117.052736, 36.012423], "note": "泰安"},
-    {"name": "BU", "position": [120.266099, 36.613507], "note": "青岛"},
-    {"name": "GV", "position": [118.980753, 36.622718], "note": "潍坊"},
-    {"name": "C", "position": [117.886744, 36.618112], "note": "淄博"},
-    {"name": "AS", "position": [117.16176, 36.677962], "note": "济南"},
-    {"name": "K", "position": [122.050663, 37.177945], "note": "威海"},
-    {"name": "FY", "position": [120.834175, 37.314978], "note": "烟台"},
-    {"name": "E", "position": [118.602036, 37.606483], "note": "东营"},
-    {"name": "M", "position": [117.804433, 37.524612], "note": "滨州"},
-    {"name": "N", "position": [116.622374, 37.22365], "note": "德州"},
-    {"name": "P", "position": [115.928058, 36.521334], "note": "聊城"}]
+    {"name": "A", "position": [113.62,34.75], "note": "郑州"},
+    {"name": "B", "position": [114.3, 34.8], "note": "开封"},
+    {"name": "C", "position": [112.45, 34.62], "note": "洛阳"},
+    {"name": "D", "position": [113.18, 33.77], "note": "平顶山"},
+    {"name": "E", "position": [114.38, 36.1], "note": "安阳"},
+    {"name": "F", "position": [114.28, 35.75], "note": "鹤壁"},
+    {"name": "G", "position": [113.9, 35.3], "note": "新乡"},
+    {"name": "H", "position": [113.25, 35.22], "note": "焦作"},
+    {"name": "J", "position": [115.03, 35.77], "note": "濮阳"},
+    {"name": "K", "position": [113.85, 34.03], "note": "许昌"},
+    {"name": "L", "position": [114.02, 33.58], "note": "漯河"},
+    {"name": "M", "position": [111.2, 34.78], "note": "三门峡"},
+    {"name": "N", "position": [115.65, 34.45], "note": "商丘"},
+    {"name": "P", "position": [114.63, 33.63], "note": "周口"},
+    {"name": "Q", "position": [114.02, 32.98], "note": "驻马店"},
+    {"name": "R", "position": [112.52, 33.0], "note": "南阳"},
+    {"name": "S", "position": [114.07, 32.13], "note": "信阳"},
+    {"name": "U", "position": [112.60235, 35.06905], "note": "济源"},
+]
 
 onMounted(() => {
     AMapLoader.load({
@@ -57,7 +61,7 @@ onMounted(() => {
     }).then(mapItem => {
         AMap = mapItem
         map = new AMap.Map('container', {
-            center: [118.785193, 36.38918],
+            center: [113.567688,33.85284],
             zoom: 7.5, // 缩放级别
             mapStyle: 'amap://styles/whitesmoke'
         })
@@ -71,8 +75,10 @@ onMounted(() => {
         // map.addControl(new AMap.ToolBar())
         map.addControl(new AMap.Scale())
 
-        let CodeShandong = 370000
-        initPro(CodeShandong, DEPTH.city)
+        // let CodeShandong = 370000 // 山东
+        // 省/直辖市行政区代码 参考：https://config.net.cn/tools/ProvinceCityZipCode.html
+        let CodeHenan = 410000 // 河南
+        initPro(CodeHenan, DEPTH.city)
         provinceMarkers.forEach(item => {
             addMarker(map, item)
         })
@@ -82,6 +88,8 @@ onMounted(() => {
     })
 })
 
+// 文档参考：https://lbs.amap.com/api/javascript-api/guide/layers/districtlayer
+// demo参考：https://lbs.amap.com/demo/javascript-api/example/district/district-pro
 function initPro(code, dep) {
     layerCity && layerCity.setMap(null)
     layerCity = new AMap.DistrictLayer.Province({
@@ -95,7 +103,7 @@ function initPro(code, dep) {
                 // adcode_pro
                 // adcode_cit
                 // adcode
-                if (properties.adcode.toString().indexOf('37') === 0) {
+                if (properties.adcode.toString().indexOf('41') === 0) { // 给各个市上色
                     return ColorsProvince[properties.adcode].color
                 }
             },

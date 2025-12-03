@@ -48,6 +48,7 @@
 
 <script setup lang="ts">
 import { onBeforeMount, ref } from 'vue'
+import type { ItemOption } from './imageFallInterface'
 
 const props = withDefaults(
     defineProps<{

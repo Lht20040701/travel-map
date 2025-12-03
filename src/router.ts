@@ -73,9 +73,9 @@ const FIXED_ROUTES: Array<RouteRecordRaw> = [
         path: '/info',
         component: Layout,
         redirect: '/info/plate',
-        meta: {title: '济南本地信息', showInMenu: true, icon: 'CreditCard' /* 菜单 icon 对应 Element UI 中的 ICON class 名 */},
+        meta: {title: '濮阳本地信息', showInMenu: true, icon: 'CreditCard' /* 菜单 icon 对应 Element UI 中的 ICON class 名 */},
         children: [
-            {name: 'MotorHighway'      , path: 'motor-highway'  , meta: {title: '摩托车高速'  , showInMenu: true} , component: () => import('./page/info/motorHighway/MotorHighway.vue')} ,
+            {name: 'MotorHighway'      , path: 'motor-highway'  , meta: {title: '全国摩托车高速'  , showInMenu: true} , component: () => import('./page/info/motorHighway/MotorHighway.vue')} ,
             {name: 'InfoPlate'         , path: 'plate'          , meta: {title: '山东各市车牌'  , showInMenu: true} , component: () => import('./page/info/carPlate/CarPlate.vue')} ,
             {name: 'InfoCarDepartment' , path: 'car-department' , meta: {title: '济南车管所'   , showInMenu: true} , component: () => import('./page/info/car/CarDepartment.vue')} ,
             {name: 'HighwayXueye'      , path: 'highway-xueye'  , meta: {title: '济南籍车辆高速免费' , showInMenu: true} , component: () => import('./page/info/highwayXueye/HighwayXueye.vue')} ,
@@ -108,7 +108,8 @@ const FIXED_ROUTES: Array<RouteRecordRaw> = [
         component: Layout,
         meta: {title: '瀑布图', showInMenu: true, icon: 'ChatLineRound'},
         children: [
-            {name: 'ImageFall', path: 'show', meta: {title: '瀑布图', showInMenu: true, icon: 'List'}, component: () => import('./page/imageFall/ImageFall.vue')},
+            {name: 'ImageShow', path: 'show', meta: {title: '瀑布图', showInMenu: true, icon: 'List'}, component: () => import('./page/imageFall/ImageFall.vue')},
+            {name: 'ImagePublish', path: 'publish', meta: {title: '发布图片', showInMenu: true, icon: 'Camera'}, component: () => import('./page/imageFall/ImagePublish.vue')},
         ]
     },
     {
