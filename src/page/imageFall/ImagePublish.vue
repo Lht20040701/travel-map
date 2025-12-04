@@ -57,77 +57,22 @@
           </div>
         </ElFormItem>
 
-        <ElFormItem label="描述" prop="description">
-          <ElInput
-            v-model="formPublish.description"
-            type="textarea"
-            placeholder="请输入图片描述（选填）"
-            :rows="4"
-            maxlength="200"
-            show-word-limit
-          />
-        </ElFormItem>
-
-        <ElFormItem label="标签" prop="tags">
-          <div class="tags-input">
-            <ElTag
-              v-for="tag in formPublish.tags"
-              :key="tag"
-              closable
-              @close="handleRemoveTag(tag)"
-              class="tag-item"
-            >
-              {{ tag }}
-            </ElTag>
-            <ElInput
-              v-if="tagInputVisible"
-              ref="tagInputRef"
-              v-model="tagInputValue"
-              class="tag-input"
-              size="small"
-              @keyup.enter="handleAddTag"
-              @blur="handleAddTag"
-              placeholder="输入标签"
-            />
-            <ElButton
-              v-else
-              size="small"
-              @click="showTagInput"
-              icon="Plus"
-            >
-              添加标签
-            </ElButton>
-          </div>
-        </ElFormItem>
-
-        <ElFormItem label="是否公开" prop="isPublic">
-          <ElRadio :label="1" v-model="formPublish.isPublic">公开</ElRadio>
-          <ElRadio :label="0" v-model="formPublish.isPublic">私有</ElRadio>
-        </ElFormItem>
-
-        <ElFormItem label="位置" prop="location">
-          <ElInput
-            v-model="formPublish.location"
-            placeholder="请输入拍摄地点（选填）"
-          />
-        </ElFormItem>
-
         <ElFormItem>
           <div class="form-actions">
             <ElButton
-              v-if="getAuthorization()"
-              type="primary"
-              @click="handleSubmit"
-              :loading="isSubmitting"
-              icon="Upload"
+                v-if="getAuthorization()"
+                type="primary"
+                @click="handleSubmit"
+                :loading="isSubmitting"
+                icon="Upload"
             >
               发布
             </ElButton>
             <ElButton
-              v-else
-              type="primary"
-              @click="$router.push({name: 'Login'})"
-              icon="User"
+                v-else
+                type="primary"
+                @click="$router.push({name: 'Login'})"
+                icon="User"
             >
               请先登录
             </ElButton>
@@ -139,41 +84,53 @@
     </div>
 
     <!-- 预览区域 -->
-    <div class="card preview-panel" v-if="imagePreview">
-      <div class="panel-header">
-        <h3>预览效果</h3>
+    <div class="preview-section" :class="{ 'has-preview': imagePreview }">
+      <div class="preview-header">
+        <h3>
+          <i class="el-icon-view"></i>
+          预览效果
+          <span class="preview-hint" v-if="!imagePreview">(上传图片后显示预览)</span>
+        </h3>
       </div>
-      <div class="preview-content">
-        <Card
-          :item="previewItem"
-          :onlyImage="false"
-        />
+      <div class="preview-container">
+        <transition name="fade">
+          <div class="card preview-panel" v-if="imagePreview">
+            <div class="preview-content">
+              <Card
+                :item="previewItem"
+                :onlyImage="false"
+              />
+            </div>
+          </div>
+          <div v-else class="empty-preview">
+            <i class="el-icon-picture-outline"></i>
+            <p>预览将在此处显示</p>
+          </div>
+        </transition>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, nextTick } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { ElMessage, ElNotification, FormRules } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { getAuthorization } from '@/utility'
 import Card from './Card.vue'
 import type { ItemOption } from './imageFallInterface'
+import { useProjectStore } from "@/store.ts";
 
 const router = useRouter()
+const store = useProjectStore()
 
-// Form data
+// 表单数据
 const formPublish = reactive({
   title: '',
   imageFile: null as File | null,
-  description: '',
-  tags: [] as string[],
-  isPublic: 1,
-  location: ''
 })
 
-// Form validation rules
+// 表单验证规则
 const formPublishRules = reactive<FormRules>({
   title: [
     { required: true, message: '请输入图片标题', trigger: 'blur' },
@@ -187,26 +144,25 @@ const formPublishRules = reactive<FormRules>({
 // Refs
 const refFormPublish = ref()
 const uploadRef = ref()
-const tagInputRef = ref()
 
 // State
 const imagePreview = ref<string>('')
 const isSubmitting = ref(false)
-const tagInputVisible = ref(false)
-const tagInputValue = ref('')
 
-// Handle image upload
+// 图片上传
 const handleImageChange = (file: any) => {
+  // 文档说明：https://element-plus.org/zh-CN/component/upload#%E7%B1%BB%E5%9E%8B%E5%A3%B0%E6%98%8E
+  // 注意rawFile调用的方法很多都是原生的File类型，File又继承了Blob类型，具体方法直接上MDN查就行了
   const rawFile = file.raw
 
-  // Validate file type
+  // 验证是否是图片类型，MIME类型参考：https://developer.mozilla.org/zh-CN/docs/Glossary/MIME_type
   const isImage = rawFile.type.startsWith('image/')
   if (!isImage) {
     ElMessage.error('只能上传图片文件！')
     return
   }
 
-  // Validate file size (10MB)
+  // 验证图片大小, .size返回的是字节
   const isLt10M = rawFile.size / 1024 / 1024 < 10
   if (!isLt10M) {
     ElMessage.error('图片大小不能超过 10MB！')
@@ -215,15 +171,19 @@ const handleImageChange = (file: any) => {
 
   formPublish.imageFile = rawFile
 
-  // Create preview
+  // 创建预览信息
   const reader = new FileReader()
+  // 设置文件读取成功后触发事件：https://developer.mozilla.org/zh-CN/docs/Web/API/FileReader/load_event
   reader.onload = (e) => {
+    console.log("result", e.target?.result)
     imagePreview.value = e.target?.result as string
   }
+  // 读取文件：https://developer.mozilla.org/zh-CN/docs/Web/API/FileReader/readAsDataURL
+  // 读取后result是一个base64字符串
   reader.readAsDataURL(rawFile)
 }
 
-// Remove image
+// 移除图片
 const removeImage = () => {
   formPublish.imageFile = null
   imagePreview.value = ''
@@ -232,49 +192,21 @@ const removeImage = () => {
   }
 }
 
-// Tag management
-const showTagInput = () => {
-  tagInputVisible.value = true
-  nextTick(() => {
-    tagInputRef.value?.focus()
-  })
-}
-
-const handleAddTag = () => {
-  const tag = tagInputValue.value.trim()
-  if (tag && !formPublish.tags.includes(tag)) {
-    if (formPublish.tags.length >= 5) {
-      ElMessage.warning('最多添加 5 个标签')
-      return
-    }
-    formPublish.tags.push(tag)
-  }
-  tagInputVisible.value = false
-  tagInputValue.value = ''
-}
-
-const handleRemoveTag = (tag: string) => {
-  const index = formPublish.tags.indexOf(tag)
-  if (index > -1) {
-    formPublish.tags.splice(index, 1)
-  }
-}
-
-// Preview item for Card component
+// 卡片组件的预览信息
 const previewItem = computed<ItemOption>(() => {
   return {
     id: 0,
-    title: formPublish.title || '未命名',
+    title: formPublish.title || '未编写标题',
     url: imagePreview.value,
     width: 300,
     height: 400,
-    avatar: 'https://via.placeholder.com/40',
-    user: '当前用户',
-    views: 0
+    avatar: store.authorization.avatar || 'http://cnd.ilovelihaotian.icu/default_avatar.png',
+    user: store.authorization.nickname || '当前用户',
+    views: 1000
   }
 })
 
-// Form submission
+// 表单提交
 const handleSubmit = async () => {
   if (!refFormPublish.value) return
 
@@ -297,10 +229,6 @@ const submitForm = async () => {
     // const formData = new FormData()
     // formData.append('title', formPublish.title)
     // formData.append('image', formPublish.imageFile!)
-    // formData.append('description', formPublish.description)
-    // formData.append('tags', JSON.stringify(formPublish.tags))
-    // formData.append('isPublic', formPublish.isPublic.toString())
-    // formData.append('location', formPublish.location)
 
     // const response = await imageApi.publish(formData)
 
@@ -314,9 +242,9 @@ const submitForm = async () => {
       position: 'top-right'
     })
 
-    // Reset form and redirect
+    // 重置
     handleReset()
-    // router.push({ name: 'ImageFall' })
+    // router.push({ name: 'ImageFall' }) // 可选跳转
 
   } catch (error) {
     ElMessage.error('发布失败，请重试')
@@ -326,16 +254,13 @@ const submitForm = async () => {
   }
 }
 
-// Reset form
+// 重置表单
 const handleReset = () => {
   refFormPublish.value?.resetFields()
   removeImage()
-  formPublish.tags = []
-  formPublish.description = ''
-  formPublish.location = ''
 }
 
-// Cancel and go back
+// 取消并返回
 const handleCancel = () => {
   router.back()
 }
@@ -458,52 +383,102 @@ const handleCancel = () => {
           }
         }
       }
-
-      .tags-input {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-
-        .tag-item {
-          margin: 0;
-        }
-
-        .tag-input {
-          width: 120px;
-        }
-      }
-
-      .form-actions {
-        display: flex;
-        gap: 12px;
-      }
     }
   }
 
-  .preview-panel {
+  .preview-section {
     flex-shrink: 0;
-    width: 400px;
-    height: fit-content;
+    width: 420px;
     position: sticky;
     top: 20px;
+    background: #f8f9fc;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    border: 2px dashed #e0e3e9;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
 
-    .panel-header {
+    &.has-preview {
+      border-color: #d9ecff;
+      background: #f0f7ff;
+    }
+
+    .preview-header {
       margin-bottom: 16px;
       padding-bottom: 12px;
-      border-bottom: 2px solid #e3e8f7;
+      border-bottom: 2px solid #e4e7ed;
 
       h3 {
         margin: 0;
         font-size: 18px;
         font-weight: bold;
-        color: #333;
+        color: #409EFF;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .preview-hint {
+          font-size: 12px;
+          color: #909399;
+          font-weight: normal;
+          margin-left: 8px;
+        }
       }
+    }
+
+    .preview-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 150px;
+    }
+
+    .empty-preview {
+      text-align: center;
+      color: #c0c4cc;
+      padding: 30px 0;
+      width: 100%;
+
+      i {
+        font-size: 48px;
+        margin-bottom: 12px;
+        display: block;
+      }
+
+      p {
+        margin: 8px 0 0;
+        font-size: 14px;
+      }
+    }
+  }
+
+  .preview-panel {
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #e4e7ed;
+    transition: all 0.3s;
+
+    &:hover {
+      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     }
 
     .preview-content {
       width: 100%;
+      transition: all 0.3s;
     }
+  }
+
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity 0.3s ease;
+  }
+  .fade-enter-from, .fade-leave-to {
+    opacity: 0;
   }
 }
 

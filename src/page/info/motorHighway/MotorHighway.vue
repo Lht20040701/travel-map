@@ -120,7 +120,7 @@ function initPro(dep) {
                 // adcode_pro
                 // adcode_cit
                 // adcode
-                console.log(properties)
+                // console.log(properties)
                 if (provinceMap.get(properties.NAME_CHN).isAllow) {
                     return "rgb(113,182,153)"
                 } else {
