@@ -77,7 +77,7 @@ onMounted(() => {
     }).then(mapItem => {
         AMap = mapItem
         map = new AMap.Map('container', {
-            center: [118.785193, 36.38918],
+            center: [113.567688,33.85284],
             zoom: 7.5, // 缩放级别
             mapStyle: 'amap://styles/whitesmoke'
         })

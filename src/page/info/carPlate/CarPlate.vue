@@ -46,7 +46,7 @@ const provinceMarkers = [
     {"name": "Q", "position": [114.02, 32.98], "note": "驻马店"},
     {"name": "R", "position": [112.52, 33.0], "note": "南阳"},
     {"name": "S", "position": [114.07, 32.13], "note": "信阳"},
-    {"name": "U", "position": [112.60235, 35.06905], "note": "济源"},
+    {"name": "U", "position": [112.30235, 35.06905], "note": "济源"},
 ]
 
 onMounted(() => {

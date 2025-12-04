@@ -73,12 +73,12 @@ const FIXED_ROUTES: Array<RouteRecordRaw> = [
         path: '/info',
         component: Layout,
         redirect: '/info/plate',
-        meta: {title: '濮阳本地信息', showInMenu: true, icon: 'CreditCard' /* 菜单 icon 对应 Element UI 中的 ICON class 名 */},
+        meta: {title: '河南信息', showInMenu: true, icon: 'CreditCard' /* 菜单 icon 对应 Element UI 中的 ICON class 名 */},
         children: [
             {name: 'MotorHighway'      , path: 'motor-highway'  , meta: {title: '全国摩托车高速'  , showInMenu: true} , component: () => import('./page/info/motorHighway/MotorHighway.vue')} ,
-            {name: 'InfoPlate'         , path: 'plate'          , meta: {title: '山东各市车牌'  , showInMenu: true} , component: () => import('./page/info/carPlate/CarPlate.vue')} ,
-            {name: 'InfoCarDepartment' , path: 'car-department' , meta: {title: '济南车管所'   , showInMenu: true} , component: () => import('./page/info/car/CarDepartment.vue')} ,
-            {name: 'HighwayXueye'      , path: 'highway-xueye'  , meta: {title: '济南籍车辆高速免费' , showInMenu: true} , component: () => import('./page/info/highwayXueye/HighwayXueye.vue')} ,
+            {name: 'InfoPlate'         , path: 'plate'          , meta: {title: '河南各市车牌'  , showInMenu: true} , component: () => import('./page/info/carPlate/CarPlate.vue')} ,
+            {name: 'InfoCarDepartment' , path: 'car-department' , meta: {title: '济南车管所'   , showInMenu: false} , component: () => import('./page/info/car/CarDepartment.vue')} ,
+            {name: 'HighwayXueye'      , path: 'highway-xueye'  , meta: {title: '济南籍车辆高速免费' , showInMenu: false} , component: () => import('./page/info/highwayXueye/HighwayXueye.vue')} ,
         ]
     },
 
