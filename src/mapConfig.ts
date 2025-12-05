@@ -2,10 +2,10 @@ const key_web_js = '5fb96da561248731451bdd61d12a08ce' // web js key
 const key_service = '15f0ccd68462874d97e7efb44d76aa89'  // web服务 key
 // 管理地址在：https://console.amap.com/dev/key/app
 
-// 七牛云 与 《标题日记》共用一个 仓库
+// 七牛云控制台
 // 地址： https://portal.qiniu.com/kodo/overview
 const qiniu_img_base_url = 'http://cnd.ilovelihaotian.icu/' // 空间域名，最后面带 `/`
-const qiniu_bucket_name = 'travel-map-pointer-images' // 七牛云对象存储空间的名称
+const qiniu_bucket_name = 'travel-map-images' // 七牛云对象存储空间的名称
 const thumbnail200_suffix = 'thumbnail_200px' // 七牛云缩略图样式名  200x200px 质量75
 const thumbnail600_suffix = 'thumbnail_600px' // 七牛云缩略图样式名  600x600px 质量75
 const thumbnail1000_suffix = 'thumbnail_1000px' // 七牛云缩略图样式名  1000x1000px 质量75

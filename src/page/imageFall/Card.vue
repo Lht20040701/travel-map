@@ -114,6 +114,8 @@ onBeforeMount(() => {
     width: 100%;
     height: 100%;
     background-color: #e3e8f7;
+    overflow: hidden;
+    border-radius: 10px;
 
     img {
       display: block;

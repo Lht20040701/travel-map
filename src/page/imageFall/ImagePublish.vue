@@ -120,6 +120,10 @@ import { getAuthorization } from '@/utility'
 import Card from './Card.vue'
 import type { ItemOption } from './imageFallInterface'
 import { useProjectStore } from "@/store.ts";
+import {qiniu_bucket_name, qiniu_img_base_url, thumbnail200_suffix} from "@/mapConfig.ts";
+import {getUploadToken} from "@/api/fileApi.ts";
+import * as qiniu from "qiniu-js";
+import imageFallApi from "@/api/imageFallApi.ts";
 
 const router = useRouter()
 const store = useProjectStore()
@@ -147,9 +151,11 @@ const uploadRef = ref()
 
 // State
 const imagePreview = ref<string>('')
+const imageW = ref(300)
+const imageH = ref(400)
 const isSubmitting = ref(false)
 
-// 图片上传
+// 图片本地上传
 const handleImageChange = (file: any) => {
   // 文档说明：https://element-plus.org/zh-CN/component/upload#%E7%B1%BB%E5%9E%8B%E5%A3%B0%E6%98%8E
   // 注意rawFile调用的方法很多都是原生的File类型，File又继承了Blob类型，具体方法直接上MDN查就行了
@@ -175,12 +181,34 @@ const handleImageChange = (file: any) => {
   const reader = new FileReader()
   // 设置文件读取成功后触发事件：https://developer.mozilla.org/zh-CN/docs/Web/API/FileReader/load_event
   reader.onload = (e) => {
-    console.log("result", e.target?.result)
+    // console.log("result", e.target?.result)
+    getImageWH(rawFile)
+        .then(res => {
+          imageW.value = res.width
+          imageH.value = res.height
+        })
+        .catch(err => {
+          ElMessage.error(err)
+        })
     imagePreview.value = e.target?.result as string
   }
   // 读取文件：https://developer.mozilla.org/zh-CN/docs/Web/API/FileReader/readAsDataURL
   // 读取后result是一个base64字符串
   reader.readAsDataURL(rawFile)
+}
+
+// 通用函数：传入 File/Blob，返回宽高 Promise
+function getImageWH(fileOrBlob) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    // 临时 URL 指向 File/Blob 二进制
+    img.src = URL.createObjectURL(fileOrBlob)
+    img.onload = () => {
+      URL.revokeObjectURL(img.src); // 释放内存
+      resolve({ width: img.width, height: img.height })
+    }
+    img.onerror = () => reject('非有效图片或解析失败')
+  })
 }
 
 // 移除图片
@@ -198,8 +226,8 @@ const previewItem = computed<ItemOption>(() => {
     id: 0,
     title: formPublish.title || '未编写标题',
     url: imagePreview.value,
-    width: 300,
-    height: 400,
+    width: imageW.value,
+    height: imageH.value,
     avatar: store.authorization.avatar || 'http://cnd.ilovelihaotian.icu/default_avatar.png',
     user: store.authorization.nickname || '当前用户',
     views: 1000
@@ -208,6 +236,7 @@ const previewItem = computed<ItemOption>(() => {
 
 // 表单提交
 const handleSubmit = async () => {
+  // console.log(previewItem.value)
   if (!refFormPublish.value) return
 
   await refFormPublish.value.validate((valid: boolean) => {
@@ -220,38 +249,80 @@ const handleSubmit = async () => {
   })
 }
 
-const submitForm = async () => {
+const submitForm = () => {
+  // 能点击这个Button就说明已经是登录状态了
   isSubmitting.value = true
 
-  try {
-    // TODO: 调用后端接口上传图片
-    // 这里预留接口对接位置
-    // const formData = new FormData()
-    // formData.append('title', formPublish.title)
-    // formData.append('image', formPublish.imageFile!)
+  // 这里后面写七牛的上传逻辑：https://developer.qiniu.com/kodo/6889/javascript-sdk-historical-document-2-x
+  // 本项目已经有了七牛的上传案例
 
-    // const response = await imageApi.publish(formData)
+  getUploadToken({
+    bucket: qiniu_bucket_name
+  })
+      .then(res => {
+        console.log('get token success')
+        // 返回一个 Promise 来处理七牛上传，等七牛上传完毕后再处理后续事情
+        // 而且qiniu好像有默认的上传去重机制：https://developer.qiniu.com/kodo/kb/1365/how-to-avoid-the-users-to-upload-files-with-the-same-key
+        return new Promise((resolve, reject) => {
+          // 上传文件
+          const observer = {
+            next: res => {
+              console.log('next: ',res)
+            },
+            error: err => {
+              console.log('error: ',err)
+              reject(err) // 上传失败时 reject
+            },
+            // 上传完成
+            complete: res => {
+              // 返回结果，hash和key
+              // { hash: "Fi_DMzHMIK4AGB0U5P3S86-qL-7Q", key: "Fi_DMzHMIK4AGB0U5P3S86-qL-7Q" }
+              console.log('complete: ',res)
+              // 上传完成后的处理逻辑
+              resolve(res) // 上传成功时 resolve
+            }
+          }
 
-    // 模拟提交成功
-    await new Promise(resolve => setTimeout(resolve, 1000))
+          const observable = qiniu.upload(formPublish.imageFile, null, res.data, {}, {})
+          const subscription = observable.subscribe(observer) // 上传开始
+        })
+      })
+      .then(uploadResult => {
+        // 上传成功后的处理，调用后端接口上传图片
 
-    ElNotification({
-      title: '发布成功',
-      message: '您的图片已成功发布！',
-      type: 'success',
-      position: 'top-right'
-    })
+        const postData = {
+          title: previewItem.value.title,
+          url: qiniu_img_base_url + uploadResult.key,
+          width: previewItem.value.width,
+          height: previewItem.value.height,
+          uid: store.authorization.uid,
+          views: 0
+        }
 
-    // 重置
-    handleReset()
-    // router.push({ name: 'ImageFall' }) // 可选跳转
+        imageFallApi.addImage(postData)
+          .then(res => {
+            ElNotification({
+              title: '发布成功',
+              message: '您的图片已成功发布！',
+              type: 'success',
+              position: 'top-right'
+            })
+          })
+          .catch(err => {
+            ElMessage.error('发布失败，请重试')
+          })
 
-  } catch (error) {
-    ElMessage.error('发布失败，请重试')
-    console.error('Submit error:', error)
-  } finally {
-    isSubmitting.value = false
-  }
+        // 上传完成后重置，注意不要上传还没开始，就给图片清了，这样会报错
+        handleReset()
+        // router.push({ name: 'ImageFall' }) // 可选跳转
+      })
+      .catch(err => {
+        console.error('上传失败：', err)
+        ElMessage.error(err.message || '上传失败，请重试')
+      })
+      .finally(() => {
+        isSubmitting.value = false
+      })
 }
 
 // 重置表单
@@ -264,6 +335,7 @@ const handleReset = () => {
 const handleCancel = () => {
   router.back()
 }
+
 </script>
 
 <style scoped lang="scss">

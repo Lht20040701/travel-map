@@ -20,7 +20,7 @@ const projectStore = useProjectStore()
 const clipboardPointerData = ref('') // 要复制的所有路线点的数据
 let clipboard = null
 
-const imgSuffix = thumbnail200_suffix
+// const imgSuffix = thumbnail200_suffix
 const currentPointIndex = ref(null) // 当前图片需要放到哪个点位上
 
 const refInputName = ref()
@@ -284,7 +284,8 @@ watch(modelData, newValue => {
                     <td>
                         <ElTooltip effect="dark" trigger="hover" placement="top" content="点击上传图片">
                             <div class="img-wrapper">
-                                <img v-if="pointerImg" :src="`${pointerImg}-${imgSuffix}`" alt="图片">
+<!--                            <img v-if="pointerImg" :src="`${pointerImg}-${imgSuffix}`" alt="图片">-->
+                                <img v-if="pointerImg" :src="`${pointerImg}`" alt="图片">
                                 <label class="logo avatar" for="avatar">
                                     <ElIcon size="14"><Upload/></ElIcon>
                                 </label>
@@ -322,7 +323,8 @@ watch(modelData, newValue => {
                     </td>
                     <td>
                         <div class="img-wrapper">
-                            <img v-if="item.img" :src="`${item.img}-${imgSuffix}`" alt="图片">
+<!--                            <img v-if="item.img" :src="`${item.img}-${imgSuffix}`" alt="图片">-->
+                            <img v-if="item.img" :src="`${item.img}`" alt="图片">
                             <label class="logo avatar" for="avatar" @click="currentPointIndex = index">
                                 <ElIcon size="14"><Upload/></ElIcon>
                             </label>
