@@ -51,7 +51,7 @@ declare global {
 
 const refCirclePanel = ref()
 
-const MY_POSITION: [number, number] = [117.129533, 36.685668]
+const MY_POSITION: [number, number] = [115.044913,35.78035]
 let AMap: any = null
 
 const store = useProjectStore()
@@ -117,7 +117,7 @@ onMounted(() => {
             AMap = mapItem
             window.map = new AMap.Map('container', {
                 center: MY_POSITION,
-                zoom: 11
+                zoom: 14
             })
 
             // map.addControl(new AMap.ToolBar())
