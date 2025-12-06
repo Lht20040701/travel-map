@@ -113,13 +113,15 @@ const useWaterfall = (): {
         }
         data.page += 1
         // const response = await fetch(`https://mock.yuan.sh/images?page=${data.page}&size=${data.size}&mode=simple`)
-        const result = await imageFallApi.allImages()
+        // const result = await imageFallApi.allImages()
+        const result = await imageFallApi.pageImages({page: data.page, size: data.size})
         if (!result.data.list.length) {
             data.end = true
             return
         }
-        data.total = result.total
-        data.max = result.max
+        // 如果用demo作者的数据，这里需要用result，如果我写的，就是result.data
+        data.total = result.data.total
+        data.max = result.data.max
         data.list = [...data.list, ...result.data.list]
     }
 
