@@ -11,7 +11,12 @@
                             <ElInput clearable placeholder="搜索标题、内容" v-model="formSearch.keyword"></ElInput>
                         </ElFormItem>
                         <ElFormItem label="分类">
-                            <ElSelect v-model="formSearch.category" placeholder="全部分类" clearable>
+                            <ElSelect
+                                v-model="formSearch.category"
+                                placeholder="全部分类"
+                                clearable
+                                style="min-width: 160px"
+                            >
                                 <ElOption label="全部" value=""></ElOption>
                                 <ElOption label="路线讨论" value="route"></ElOption>
                                 <ElOption label="经验分享" value="experience"></ElOption>
@@ -36,8 +41,8 @@
                     热门讨论
                 </h3>
                 <div class="topic-cards">
-                    <div 
-                        v-for="topic in hotTopics" 
+                    <div
+                        v-for="topic in hotTopics"
                         :key="topic.id"
                         class="topic-card hot-card"
                         @click="viewTopic(topic.id)"
@@ -124,20 +129,20 @@
                     <ElTableColumn width="180" prop="date" label="发布时间" align="center"/>
                     <ElTableColumn width="120" label="操作" align="center" fixed="right">
                         <template #default="scope">
-                            <ElButton 
-                                class="btn-narrow" 
+                            <ElButton
+                                class="btn-narrow"
                                 type="primary"
-                                @click="viewTopic(scope.row.id)" 
-                                size="small" 
-                                plain 
+                                @click="viewTopic(scope.row.id)"
+                                size="small"
+                                plain
                                 icon="View">查看</ElButton>
-                            <ElButton 
-                                class="btn-narrow" 
+                            <ElButton
+                                class="btn-narrow"
                                 type="danger"
                                 v-if="store.isAdmin || (store.authorization && Number(store.authorization.uid) === scope.row.uid)"
-                                @click="deleteTopic(scope.row)" 
-                                size="small" 
-                                plain 
+                                @click="deleteTopic(scope.row)"
+                                size="small"
+                                plain
                                 icon="Delete">删除</ElButton>
                         </template>
                     </ElTableColumn>
@@ -161,7 +166,7 @@
                 :model="formPost"
                 :rules="postRules"
                 size="default"
-                ref="refPostForm" 
+                ref="refPostForm"
                 label-width="100px">
                 <ElFormItem label="标题" prop="title">
                     <ElInput v-model="formPost.title" placeholder="请输入帖子标题"/>
@@ -178,10 +183,10 @@
                     <ElInput v-model="formPost.routeName" placeholder="可选：输入路线名称"/>
                 </ElFormItem>
                 <ElFormItem label="内容" prop="content">
-                    <ElInput 
-                        type="textarea" 
-                        placeholder="支持 Markdown 格式" 
-                        :rows="10" 
+                    <ElInput
+                        type="textarea"
+                        placeholder="支持 Markdown 格式"
+                        :rows="10"
                         v-model="formPost.content"/>
                 </ElFormItem>
             </ElForm>
@@ -444,7 +449,7 @@ function deleteTopic(topic: any) {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     .el-icon {
         color: $color-main;
     }
@@ -452,14 +457,14 @@ function deleteTopic(topic: any) {
 
 .hot-topics {
     margin-bottom: 30px;
-    
+
     .topic-cards {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
         gap: 15px;
         margin-bottom: 20px;
     }
-    
+
     .topic-card {
         background: white;
         border-radius: 8px;
@@ -467,23 +472,23 @@ function deleteTopic(topic: any) {
         cursor: pointer;
         transition: all 0.3s;
         border: 1px solid $border-normal;
-        
+
         &:hover {
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transform: translateY(-2px);
         }
-        
+
         &.hot-card {
             border-left: 4px solid $red;
         }
     }
-    
+
     .topic-header {
         display: flex;
         align-items: center;
         gap: 10px;
         margin-bottom: 10px;
-        
+
         .topic-title {
             font-size: 16px;
             font-weight: 600;
@@ -491,17 +496,17 @@ function deleteTopic(topic: any) {
             flex: 1;
         }
     }
-    
+
     .topic-meta {
         font-size: 12px;
         color: $text-subtitle;
         margin-bottom: 10px;
-        
+
         .divider {
             margin: 0 5px;
         }
     }
-    
+
     .topic-content {
         font-size: 14px;
         color: $text-description;
@@ -512,20 +517,20 @@ function deleteTopic(topic: any) {
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
-    
+
     .topic-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding-top: 10px;
         border-top: 1px solid $border-normal;
-        
+
         .topic-stats {
             display: flex;
             gap: 15px;
             font-size: 12px;
             color: $text-subtitle;
-            
+
             span {
                 display: flex;
                 align-items: center;
@@ -540,24 +545,24 @@ function deleteTopic(topic: any) {
         display: flex;
         align-items: center;
         gap: 8px;
-        
+
         .title-text {
             cursor: pointer;
             color: $color-primary;
-            
+
             &:hover {
                 text-decoration: underline;
             }
         }
     }
-    
+
     .last-reply {
         font-size: 12px;
-        
+
         .date {
             color: $text-subtitle;
         }
-        
+
         .user {
             color: $text-description;
             margin-top: 2px;
@@ -568,5 +573,9 @@ function deleteTopic(topic: any) {
 .search-bar {
     display: flex;
     align-items: center;
+
+    .el-select {
+        min-width: 200px;
+    }
 }
 </style>
