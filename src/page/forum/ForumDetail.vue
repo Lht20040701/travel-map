@@ -8,11 +8,11 @@
                 <div class="topic-actions">
                     <ElButton 
                         type="warning" 
-                        :icon="topic.isTop ? 'Bottom' : 'Top'"
+                        :icon="topic.isTop === 1 ? 'Bottom' : 'Top'"
                         @click="toggleTop"
                         v-if="store.isAdmin"
                     >
-                        {{ topic.isTop ? '取消置顶' : '置顶' }}
+                        {{ topic.isTop === 1 ? '取消置顶' : '置顶' }}
                     </ElButton>
                     <ElButton 
                         type="danger" 
@@ -33,7 +33,7 @@
                 <div class="topic-header">
                     <div class="topic-title-section">
                         <h1 class="topic-title">
-                            <ElTag v-if="topic.isTop" type="warning" size="small" effect="dark">置顶</ElTag>
+                            <ElTag v-if="topic.isTop === 1" type="warning" size="small" effect="dark">置顶</ElTag>
                             <ElTag v-if="topic.category" :type="getCategoryType(topic.category)" size="small">
                                 {{ getCategoryName(topic.category) }}
                             </ElTag>
@@ -47,7 +47,7 @@
                             <span class="divider">•</span>
                             <span class="date">
                                 <ElIcon><Clock /></ElIcon>
-                                {{ topic.date }}
+                                {{ topic.publishTime }}
                             </span>
                             <span class="divider">•</span>
                             <span class="views">
@@ -59,10 +59,10 @@
                                 <ElIcon><ChatDotRound /></ElIcon>
                                 {{ topic.replies }} 回复
                             </span>
-                            <span v-if="topic.routeName" class="divider">•</span>
-                            <ElTag v-if="topic.routeName" size="small" type="info" @click="viewRoute">
+                            <span v-if="topic.routerId" class="divider">•</span>
+                            <ElTag v-if="topic.routerId" size="small" type="info" @click="viewRoute">
                                 <ElIcon><Position /></ElIcon>
-                                路线: {{ topic.routeName }}
+                                路线ID: {{ topic.routerId }}
                             </ElTag>
                         </div>
                     </div>
@@ -116,7 +116,7 @@
                 <div class="comments-list">
                     <div 
                         v-for="comment in comments" 
-                        :key="comment.id"
+                        :key="comment.commentId"
                         class="comment-item"
                     >
                         <div class="comment-avatar">
@@ -125,13 +125,13 @@
                         <div class="comment-content">
                             <div class="comment-header">
                                 <span class="comment-author">{{ comment.author }}</span>
-                                <span class="comment-date">{{ comment.date }}</span>
+                                <span class="comment-date">{{ comment.commentTime }}</span>
                                 <div class="comment-actions">
                                     <ElButton 
                                         type="text" 
                                         size="small"
                                         @click="replyToComment(comment)"
-                                        v-if="!comment.isReply"
+                                        v-if="comment.parentId === 0"
                                     >
                                         回复
                                     </ElButton>
@@ -152,7 +152,7 @@
                             <div v-if="comment.replies && comment.replies.length > 0" class="comment-replies">
                                 <div 
                                     v-for="reply in comment.replies" 
-                                    :key="reply.id"
+                                    :key="reply.commentId"
                                     class="reply-item"
                                 >
                                     <div class="reply-avatar">
@@ -161,7 +161,7 @@
                                     <div class="reply-content">
                                         <div class="reply-header">
                                             <span class="reply-author">{{ reply.author }}</span>
-                                            <span class="reply-date">{{ reply.date }}</span>
+                                            <span class="reply-date">{{ reply.commentTime }}</span>
                                             <ElButton 
                                                 type="danger" 
                                                 size="small"
@@ -206,17 +206,18 @@ const topicId = computed(() => Number(route.query.topicId) || 1)
 
 // 主题数据（静态）
 const topic = ref({
-    id: 1,
+    luntanId: 1,
     title: "分享一条绝美的济南山区路线，适合春季骑行",
-    author: "骑行者小明",
-    date: "2025-01-15 10:30:00",
+    author: "骑行者小明", // 作者信息需要从uid关联获取或后端返回
+    publishTime: "2025-01-15 10:30:00",
     views: 1250,
     replies: 45,
     likes: 128,
-    category: "route",
-    routeName: "济南山区环线",
-    isTop: true,
-    isLiked: false,
+    category: 1, // 1-路线讨论 2-经验分享 3-问题求助 4-其他
+    routerId: 1, // 关联路线id
+    cardId: null, // 关联卡片id
+    isTop: 1, // 0-否 1-是
+    isLiked: false, // 前端状态，非数据库字段
     content: `# 济南山区环线骑行分享
 
 这条路线是我经过多次探索总结出来的，非常适合春季骑行。
@@ -242,45 +243,54 @@ const topic = ref({
 - 注意交通安全，佩戴头盔
 
 希望大家都能享受这条美丽的路线！`,
-    uid: 1
+    uid: 1,
+    latestReply: null // 最新回复时间
 })
 
 // 评论数据（静态）
 const comments = ref([
     {
-        id: 1,
-        author: "骑行爱好者",
-        date: "2025-01-15 14:20",
+        commentId: 1,
+        luntanId: 1,
         content: "太棒了！我上周刚走过这条路线，确实很美！",
         uid: 2,
+        parentId: 0, // 0-一级评论
+        commentTime: "2025-01-15 14:20:00",
+        author: "骑行爱好者", // 需要从uid关联获取或后端返回
         replies: [
             {
-                id: 11,
-                author: "骑行者小明",
-                date: "2025-01-15 14:35",
+                commentId: 11,
+                luntanId: 1,
                 content: "很高兴你也喜欢！有什么建议吗？",
-                uid: 1
+                uid: 1,
+                parentId: 1, // 回复commentId=1的评论
+                commentTime: "2025-01-15 14:35:00",
+                author: "骑行者小明" // 需要从uid关联获取或后端返回
             }
         ]
     },
     {
-        id: 2,
-        author: "新手小白",
-        date: "2025-01-15 16:45",
+        commentId: 2,
+        luntanId: 1,
         content: "新手适合这条路线吗？需要准备什么装备？",
         uid: 3,
+        parentId: 0, // 0-一级评论
+        commentTime: "2025-01-15 16:45:00",
+        author: "新手小白", // 需要从uid关联获取或后端返回
         replies: []
     },
     {
-        id: 3,
-        author: "老骑友",
-        date: "2025-01-16 09:15",
+        commentId: 3,
+        luntanId: 1,
         content: `这条路线我也推荐！补充几点：
 
 1. 在XX路口有个陡坡，新手需要注意
 2. 建议带个充电宝，路上可以给手机充电
 3. 如果遇到雨天，部分路段会比较滑`,
         uid: 4,
+        parentId: 0, // 0-一级评论
+        commentTime: "2025-01-16 09:15:00",
+        author: "老骑友", // 需要从uid关联获取或后端返回
         replies: []
     }
 ])
@@ -304,22 +314,22 @@ function commentContentHtml(content: string) {
     return marked.parse(content || '')
 }
 
-function getCategoryType(category: string) {
-    const map = {
-        'route': 'primary',
-        'experience': 'success',
-        'question': 'warning',
-        'other': 'info'
+function getCategoryType(category: number) {
+    const map: Record<number, string> = {
+        1: 'primary',   // 路线讨论
+        2: 'success',   // 经验分享
+        3: 'warning',   // 问题求助
+        4: 'info'       // 其他
     }
     return map[category] || 'info'
 }
 
-function getCategoryName(category: string) {
-    const map = {
-        'route': '路线讨论',
-        'experience': '经验分享',
-        'question': '问题求助',
-        'other': '其他'
+function getCategoryName(category: number) {
+    const map: Record<number, string> = {
+        1: '路线讨论',
+        2: '经验分享',
+        3: '问题求助',
+        4: '其他'
     }
     return map[category] || '其他'
 }
@@ -335,8 +345,8 @@ function toggleLike() {
 }
 
 function toggleTop() {
-    topic.value.isTop = !topic.value.isTop
-    ElMessage.success(topic.value.isTop ? '已置顶' : '已取消置顶')
+    topic.value.isTop = topic.value.isTop === 1 ? 0 : 1
+    ElMessage.success(topic.value.isTop === 1 ? '已置顶' : '已取消置顶')
 }
 
 function deleteTopic() {
@@ -351,7 +361,7 @@ function deleteTopic() {
 }
 
 function viewRoute() {
-    if (topic.value.routeName) {
+    if (topic.value.routerId) {
         // 可以跳转到路线详情页面
         ElMessage.info('跳转到路线详情 (静态演示)')
     }
@@ -365,11 +375,13 @@ function submitComment() {
     
     // 静态演示
     const comment = {
-        id: Date.now(),
-        author: store.authorization?.nickname || '当前用户',
-        date: new Date().toLocaleString('zh-CN'),
+        commentId: Date.now(),
+        luntanId: topic.value.luntanId,
         content: newComment.value,
         uid: store.authorization?.uid || 999,
+        parentId: 0, // 0-一级评论
+        commentTime: new Date().toISOString().replace('T', ' ').slice(0, 19),
+        author: store.authorization?.nickname || '当前用户', // 需要从uid关联获取或后端返回
         replies: []
     }
     
@@ -389,11 +401,13 @@ function replyToComment(comment: any) {
     const replyContent = prompt(`回复 ${comment.author}:`)
     if (replyContent && replyContent.trim()) {
         const reply = {
-            id: Date.now(),
-            author: store.authorization?.nickname || '当前用户',
-            date: new Date().toLocaleString('zh-CN'),
+            commentId: Date.now(),
+            luntanId: topic.value.luntanId,
             content: replyContent,
-            uid: store.authorization?.uid || 999
+            uid: store.authorization?.uid || 999,
+            parentId: comment.commentId, // 回复的父评论id
+            commentTime: new Date().toISOString().replace('T', ' ').slice(0, 19),
+            author: store.authorization?.nickname || '当前用户' // 需要从uid关联获取或后端返回
         }
         
         if (!comment.replies) {
@@ -411,7 +425,7 @@ function deleteComment(comment: any) {
         cancelButtonText: '取消',
         type: 'warning'
     }).then(() => {
-        const index = comments.value.findIndex(c => c.id === comment.id)
+        const index = comments.value.findIndex(c => c.commentId === comment.commentId)
         if (index > -1) {
             comments.value.splice(index, 1)
             commentPager.value.total = comments.value.length
@@ -429,7 +443,7 @@ function deleteReply(reply: any) {
     }).then(() => {
         comments.value.forEach(comment => {
             if (comment.replies) {
-                const index = comment.replies.findIndex((r: any) => r.id === reply.id)
+                const index = comment.replies.findIndex((r: any) => r.commentId === reply.commentId)
                 if (index > -1) {
                     comment.replies.splice(index, 1)
                     topic.value.replies--
