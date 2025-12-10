@@ -9,4 +9,5 @@ export default {
     detail(params) {return request('get', params, null, false, 'user/detail')},
     list(requestData) {return request('post', null, requestData, false, 'user/list')},
     changePassword(requestData) {return request('put', null, requestData, false, 'user/change-password')},
+    getAvatarAndNickname(userId) { return  request('get', null, null, false, `user/display/${userId}`)}
 }

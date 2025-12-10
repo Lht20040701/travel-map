@@ -6,16 +6,16 @@
             </template>
             <template #center>
                 <div class="topic-actions">
-                    <ElButton 
-                        type="warning" 
+                    <ElButton
+                        type="warning"
                         :icon="topic.isTop === 1 ? 'Bottom' : 'Top'"
                         @click="toggleTop"
                         v-if="store.isAdmin"
                     >
                         {{ topic.isTop === 1 ? '取消置顶' : '置顶' }}
                     </ElButton>
-                    <ElButton 
-                        type="danger" 
+                    <ElButton
+                        type="danger"
                         icon="Delete"
                         @click="deleteTopic"
                         v-if="store.isAdmin || (store.authorization && Number(store.authorization.uid) === topic.uid)"
@@ -41,8 +41,12 @@
                         </h1>
                         <div class="topic-meta">
                             <span class="author">
-                                <ElIcon><User /></ElIcon>
-                                {{ topic.author }}
+                                <el-avatar
+                                    shape="square"
+                                    :size="25"
+                                    :src="getUserInfo(topic.uid, 'avatar')"
+                                />
+                                {{ getUserInfo(topic.uid, 'nickname') }}
                             </span>
                             <span class="divider">•</span>
                             <span class="date">
@@ -67,8 +71,8 @@
                         </div>
                     </div>
                     <div class="topic-actions-bar">
-                        <ElButton 
-                            type="danger" 
+                        <ElButton
+                            type="danger"
                             :icon="topic.isLiked ? 'StarFilled' : 'Star'"
                             @click="toggleLike"
                             plain
@@ -77,9 +81,9 @@
                         </ElButton>
                     </div>
                 </div>
-                
+
                 <div class="topic-body markdown" v-html="topicContentHtml"></div>
-                
+
                 <div class="topic-footer">
                     <div class="topic-stats">
                         <span><ElIcon><View /></ElIcon> {{ topic.views }} 浏览</span>
@@ -114,56 +118,64 @@
 
                 <!-- 评论列表 -->
                 <div class="comments-list">
-                    <div 
-                        v-for="comment in comments" 
-                        :key="comment.commentId"
+                    <div
+                        v-for="item in comments"
+                        :key="item.comment.commentId"
                         class="comment-item"
                     >
                         <div class="comment-avatar">
-                            <ElIcon size="24"><User /></ElIcon>
+                          <el-avatar
+                              shape="circle"
+                              :size="41"
+                              :src="getUserInfo(item.comment.uid, 'avatar')"
+                          />
                         </div>
                         <div class="comment-content">
                             <div class="comment-header">
-                                <span class="comment-author">{{ comment.author }}</span>
-                                <span class="comment-date">{{ comment.commentTime }}</span>
+                                <span class="comment-author">{{ getUserInfo(item.comment.uid, 'nickname') }}</span>
+                                <span class="comment-date">{{ item.comment.commentTime }}</span>
                                 <div class="comment-actions">
-                                    <ElButton 
-                                        type="text" 
+                                    <ElButton
+                                        type="text"
                                         size="small"
-                                        @click="replyToComment(comment)"
-                                        v-if="comment.parentId === 0"
+                                        @click="replyToComment(item.comment)"
+                                        v-if="item.comment.parentId === 0"
                                     >
                                         回复
                                     </ElButton>
-                                    <ElButton 
-                                        type="danger" 
+                                    <ElButton
+                                        type="danger"
                                         size="small"
                                         text
-                                        @click="deleteComment(comment)"
-                                        v-if="store.isAdmin || (store.authorization && Number(store.authorization.uid) === comment.uid)"
+                                        @click="deleteComment(item.comment)"
+                                        v-if="store.isAdmin || (store.authorization && Number(store.authorization.uid) === item.comment.uid)"
                                     >
                                         删除
                                     </ElButton>
                                 </div>
                             </div>
-                            <div class="comment-body markdown" v-html="commentContentHtml(comment.content)"></div>
-                            
+                            <div class="comment-body markdown" v-html="commentContentHtml(item.comment.content)"></div>
+
                             <!-- 回复列表 -->
-                            <div v-if="comment.replies && comment.replies.length > 0" class="comment-replies">
-                                <div 
-                                    v-for="reply in comment.replies" 
+                            <div v-if="item.replies && item.replies.length > 0" class="comment-replies">
+                                <div
+                                    v-for="reply in item.replies"
                                     :key="reply.commentId"
                                     class="reply-item"
                                 >
                                     <div class="reply-avatar">
-                                        <ElIcon size="18"><User /></ElIcon>
+                                      <el-avatar
+                                          shape="circle"
+                                          :size="27"
+                                          :src="getUserInfo(reply.uid, 'avatar')"
+                                      />
                                     </div>
                                     <div class="reply-content">
                                         <div class="reply-header">
-                                            <span class="reply-author">{{ reply.author }}</span>
+                                            <span class="reply-author">{{ getUserInfo(reply.uid, 'nickname') }}</span>
                                             <span class="reply-date">{{ reply.commentTime }}</span>
-                                            <ElButton 
-                                                type="danger" 
+                                            <ElButton
+                                                type="danger"
                                                 size="small"
                                                 text
                                                 @click="deleteReply(reply)"
@@ -197,6 +209,8 @@ import {ElMessage, ElMessageBox} from "element-plus";
 import {marked} from "marked";
 import FooterPagination from "@/layout/FooterPagination.vue";
 import Toolbar from "@/layout/Toolbar.vue";
+import forumApi from "@/api/forumApi.ts";
+import userApi from "@/api/userApi.ts";
 
 const store = useProjectStore()
 const route = useRoute()
@@ -204,96 +218,59 @@ const router = useRouter()
 
 const topicId = computed(() => Number(route.query.topicId) || 1)
 
-// 主题数据（静态）
-const topic = ref({
-    luntanId: 1,
-    title: "分享一条绝美的济南山区路线，适合春季骑行",
-    author: "骑行者小明", // 作者信息需要从uid关联获取或后端返回
-    publishTime: "2025-01-15 10:30:00",
-    views: 1250,
-    replies: 45,
-    likes: 128,
-    category: 1, // 1-路线讨论 2-经验分享 3-问题求助 4-其他
-    routerId: 1, // 关联路线id
-    cardId: null, // 关联卡片id
-    isTop: 1, // 0-否 1-是
-    isLiked: false, // 前端状态，非数据库字段
-    content: `# 济南山区环线骑行分享
+// 主题数据
+const topic = ref({})
+// 评论数据
+const comments = ref([])
+// 用户信息缓存
+const userCache = ref({})
 
-这条路线是我经过多次探索总结出来的，非常适合春季骑行。
+onMounted(() => {
+    // 获取论坛数据, 这里的luntanId暂时写死
+    forumApi.forumDetail(1).then(res => {
+        topic.value = res.data.luntan
+        comments.value = res.data.comments
 
-## 路线概况
+        // 预加载主题作者的信息
+        loadUserInfo(topic.value.uid)
 
-- **起点**: 济南市中心
-- **终点**: 济南市中心
-- **总里程**: 约85公里
-- **预计时间**: 4-5小时
-- **难度**: ⭐⭐⭐ 中等
-
-## 路线亮点
-
-1. **风景优美**: 沿途经过多个风景点，有樱花、桃花，美不胜收
-2. **路况良好**: 大部分路段都是新修的柏油路
-3. **补给方便**: 沿途有多个小镇可以休息和补给
-
-## 注意事项
-
-- 建议早上出发，避开中午高温
-- 带好充足的饮水和食物
-- 注意交通安全，佩戴头盔
-
-希望大家都能享受这条美丽的路线！`,
-    uid: 1,
-    latestReply: null // 最新回复时间
+        // 预加载评论作者的信息
+        comments.value.forEach(item => {
+            loadUserInfo(item.comment.uid)
+            item.replies.forEach(reply => {
+              loadUserInfo(reply.uid)
+            })
+        })
+    })
 })
 
-// 评论数据（静态）
-const comments = ref([
-    {
-        commentId: 1,
-        luntanId: 1,
-        content: "太棒了！我上周刚走过这条路线，确实很美！",
-        uid: 2,
-        parentId: 0, // 0-一级评论
-        commentTime: "2025-01-15 14:20:00",
-        author: "骑行爱好者", // 需要从uid关联获取或后端返回
-        replies: [
-            {
-                commentId: 11,
-                luntanId: 1,
-                content: "很高兴你也喜欢！有什么建议吗？",
-                uid: 1,
-                parentId: 1, // 回复commentId=1的评论
-                commentTime: "2025-01-15 14:35:00",
-                author: "骑行者小明" // 需要从uid关联获取或后端返回
-            }
-        ]
-    },
-    {
-        commentId: 2,
-        luntanId: 1,
-        content: "新手适合这条路线吗？需要准备什么装备？",
-        uid: 3,
-        parentId: 0, // 0-一级评论
-        commentTime: "2025-01-15 16:45:00",
-        author: "新手小白", // 需要从uid关联获取或后端返回
-        replies: []
-    },
-    {
-        commentId: 3,
-        luntanId: 1,
-        content: `这条路线我也推荐！补充几点：
+// 加载用户信息并缓存
+const loadUserInfo = async (uid) => {
+  // 如果缓存中已有数据，直接返回
+  if (userCache.value[uid]) {
+    return userCache.value[uid]
+  }
 
-1. 在XX路口有个陡坡，新手需要注意
-2. 建议带个充电宝，路上可以给手机充电
-3. 如果遇到雨天，部分路段会比较滑`,
-        uid: 4,
-        parentId: 0, // 0-一级评论
-        commentTime: "2025-01-16 09:15:00",
-        author: "老骑友", // 需要从uid关联获取或后端返回
-        replies: []
-    }
-])
+  try {
+    const res = await userApi.getAvatarAndNickname(uid)
+    // 缓存用户信息
+    userCache.value[uid] = res.data
+    return res.data
+  } catch (err) {
+    console.error('获取用户信息失败:', err)
+    userCache.value[uid] = { avatar: '', nickname: '未知用户' }
+    return { avatar: '', nickname: '未知用户' }
+  }
+}
+
+// 获取用户头像或昵称
+const getUserInfo = (uid, which) => {
+  if (userCache.value[uid]) {
+    return which === 'avatar' ? userCache.value[uid].avatar : userCache.value[uid].nickname
+  }
+  // 如果还没有加载完成，返回默认值
+  return which === 'avatar' ? '' : '加载中...'
+}
 
 const newComment = ref('')
 const commentPager = ref({
@@ -372,7 +349,7 @@ function submitComment() {
         ElMessage.warning('请输入评论内容')
         return
     }
-    
+
     // 静态演示
     const comment = {
         commentId: Date.now(),
@@ -384,7 +361,7 @@ function submitComment() {
         author: store.authorization?.nickname || '当前用户', // 需要从uid关联获取或后端返回
         replies: []
     }
-    
+
     comments.value.push(comment)
     commentPager.value.total = comments.value.length
     topic.value.replies = comments.value.length
@@ -409,7 +386,7 @@ function replyToComment(comment: any) {
             commentTime: new Date().toISOString().replace('T', ' ').slice(0, 19),
             author: store.authorization?.nickname || '当前用户' // 需要从uid关联获取或后端返回
         }
-        
+
         if (!comment.replies) {
             comment.replies = []
         }
@@ -507,13 +484,13 @@ function pageChange() {
     font-size: 14px;
     color: $text-subtitle;
     flex-wrap: wrap;
-    
+
     span {
         display: flex;
         align-items: center;
         gap: 4px;
     }
-    
+
     .divider {
         margin: 0 5px;
     }
@@ -536,13 +513,13 @@ function pageChange() {
 .topic-footer {
     margin-top: 20px;
     padding-top: 15px;
-    
+
     .topic-stats {
         display: flex;
         gap: 20px;
         font-size: 14px;
         color: $text-subtitle;
-        
+
         span {
             display: flex;
             align-items: center;
@@ -559,7 +536,7 @@ function pageChange() {
         display: flex;
         align-items: center;
         gap: 8px;
-        
+
         .el-icon {
             color: $color-main;
         }
@@ -571,7 +548,7 @@ function pageChange() {
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
-    
+
     .comment-editor {
         .comment-actions {
             margin-top: 10px;
@@ -591,7 +568,7 @@ function pageChange() {
         display: flex;
         gap: 15px;
     }
-    
+
     .comment-avatar {
         width: 40px;
         height: 40px;
@@ -603,44 +580,44 @@ function pageChange() {
         color: $text-subtitle;
         flex-shrink: 0;
     }
-    
+
     .comment-content {
         flex: 1;
     }
-    
+
     .comment-header {
         display: flex;
         align-items: center;
         gap: 10px;
         margin-bottom: 10px;
-        
+
         .comment-author {
             font-weight: 600;
             color: $text-main;
         }
-        
+
         .comment-date {
             font-size: 12px;
             color: $text-subtitle;
         }
-        
+
         .comment-actions {
             margin-left: auto;
         }
     }
-    
+
     .comment-body {
         color: $text-description;
         line-height: 1.6;
         margin-bottom: 10px;
     }
-    
+
     .comment-replies {
         margin-top: 15px;
         padding-left: 20px;
         border-left: 3px solid $border-normal;
     }
-    
+
     .reply-item {
         display: flex;
         gap: 10px;
@@ -649,7 +626,7 @@ function pageChange() {
         background: $bg-light;
         border-radius: 6px;
     }
-    
+
     .reply-avatar {
         width: 30px;
         height: 30px;
@@ -662,29 +639,29 @@ function pageChange() {
         flex-shrink: 0;
         font-size: 14px;
     }
-    
+
     .reply-content {
         flex: 1;
     }
-    
+
     .reply-header {
         display: flex;
         align-items: center;
         gap: 8px;
         margin-bottom: 5px;
-        
+
         .reply-author {
             font-weight: 500;
             font-size: 13px;
             color: $text-main;
         }
-        
+
         .reply-date {
             font-size: 11px;
             color: $text-subtitle;
         }
     }
-    
+
     .reply-body {
         font-size: 13px;
         color: $text-description;
