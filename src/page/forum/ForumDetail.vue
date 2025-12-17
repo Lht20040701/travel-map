@@ -216,7 +216,7 @@ const store = useProjectStore()
 const route = useRoute()
 const router = useRouter()
 
-const topicId = computed(() => Number(route.query.topicId) || 1)
+const luntanId = computed(() => Number(route.query.luntanId) || 1)
 
 // 主题数据
 const topic = ref({})
@@ -227,7 +227,7 @@ const userCache = ref({})
 
 onMounted(() => {
     // 获取论坛数据, 这里的luntanId暂时写死
-    forumApi.forumDetail(1).then(res => {
+    forumApi.forumDetail(luntanId.value).then(res => {
         topic.value = res.data.luntan
         comments.value = res.data.comments
 

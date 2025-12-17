@@ -43,9 +43,9 @@
                 <div class="topic-cards">
                     <div
                         v-for="topic in hotTopics"
-                        :key="topic.id"
+                        :key="topic.luntanId"
                         class="topic-card hot-card"
-                        @click="viewTopic(topic.id)"
+                        @click="viewTopic(topic.luntanId)"
                     >
                         <div class="topic-header">
                             <ElTag type="danger" size="small" effect="dark">热门</ElTag>
@@ -92,7 +92,7 @@
                                 <ElTag v-if="scope.row.category" :type="getCategoryType(scope.row.category)" size="small">
                                     {{ getCategoryName(scope.row.category) }}
                                 </ElTag>
-                                <span class="title-text" @click="viewTopic(scope.row.id)">{{ scope.row.title }}</span>
+                                <span class="title-text" @click="viewTopic(scope.row.luntanId)">{{ scope.row.title }}</span>
                             </div>
                         </template>
                     </ElTableColumn>
@@ -132,7 +132,7 @@
                             <ElButton
                                 class="btn-narrow"
                                 type="primary"
-                                @click="viewTopic(scope.row.id)"
+                                @click="viewTopic(scope.row.luntanId)"
                                 size="small"
                                 plain
                                 icon="View">查看</ElButton>
@@ -244,7 +244,7 @@ function search() {
 function viewTopic(id: number) {
     router.push({
         name: 'ForumDetail',
-        query: { topicId: id }
+        query: { luntanId: id }
     })
 }
 
