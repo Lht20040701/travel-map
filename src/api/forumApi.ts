@@ -38,4 +38,7 @@ export default {
     forumList(requestData: ForumListRequest): Promise<ServerResponse<ForumList>> {
         return request('post', null, requestData, false, 'forum/list')
     },
+    addForum(requestData) {
+        return request('post', null, requestData, false, 'forum/add')
+    }
 }

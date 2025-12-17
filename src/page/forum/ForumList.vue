@@ -173,7 +173,6 @@ const router = useRouter()
 
 const isLoading = ref(false)
 const tableData = ref([])
-const isShowDialogPost = ref(false)
 
 // 热门主题数据（静态数据）
 const hotTopics = ref([
@@ -191,14 +190,6 @@ const hotTopics = ref([
         routerId: 3
     }
 ])
-
-// 表单数据
-const formPost = ref({
-    title: '',
-    category: '',
-    routeName: '',
-    content: ''
-})
 
 // 分页
 const pager = ref({
@@ -249,17 +240,7 @@ function viewTopic(id: number) {
 }
 
 function createPost() {
-    isShowDialogPost.value = true
-    clearPostForm()
-}
-
-function clearPostForm() {
-    formPost.value = {
-        title: '',
-        category: '',
-        routeName: '',
-        content: ''
-    }
+    router.push({ name: 'ForumCreate' })
 }
 
 function pageChange() {
