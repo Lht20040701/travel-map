@@ -18,10 +18,10 @@
                                 style="min-width: 160px"
                             >
                                 <ElOption label="全部" value=""></ElOption>
-                                <ElOption label="路线讨论" value="route"></ElOption>
-                                <ElOption label="经验分享" value="experience"></ElOption>
-                                <ElOption label="问题求助" value="question"></ElOption>
-                                <ElOption label="其他" value="other"></ElOption>
+                                <ElOption label="路线讨论" :value="1"></ElOption>
+                                <ElOption label="经验分享" :value="2"></ElOption>
+                                <ElOption label="问题求助" :value="3"></ElOption>
+                                <ElOption label="其他" :value="4"></ElOption>
                             </ElSelect>
                         </ElFormItem>
                         <ElFormItem>
@@ -54,7 +54,7 @@
                         <div class="topic-meta">
                             <span class="author">{{ topic.author }}</span>
                             <span class="divider">•</span>
-                            <span class="date">{{ topic.date }}</span>
+                            <span class="date">{{ topic.publishTime }}</span>
                             <span class="divider">•</span>
                             <span class="views">{{ topic.views }} 浏览</span>
                         </div>
@@ -84,7 +84,7 @@
                     :data="tableData"
                     v-loading="isLoading"
                 >
-                    <ElTableColumn width="60" prop="id" label="#" align="center"/>
+                    <ElTableColumn width="60" prop="luntanId" label="#" align="center"/>
                     <ElTableColumn min-width="300" prop="title" label="标题">
                         <template #default="scope">
                             <div class="topic-title-cell">
@@ -118,16 +118,16 @@
                             <span><ElIcon><Star /></ElIcon> {{ scope.row.likes }}</span>
                         </template>
                     </ElTableColumn>
-                    <ElTableColumn width="150" prop="lastReplyTime" label="最后回复" align="center">
+                    <ElTableColumn width="150" prop="lastestReply" label="最后回复" align="center">
                         <template #default="scope">
                             <div class="last-reply">
-                                <div class="date">{{ scope.row.lastReplyTime }}</div>
-                                <div class="user" v-if="scope.row.lastReplyUser">{{ scope.row.lastReplyUser }}</div>
+                                <div class="date">{{ scope.row.latestReply }}</div>
+                                <div class="user" v-if="scope.row.lastReplyUser">{{ scope.row.latestReply }}</div>
                             </div>
                         </template>
                     </ElTableColumn>
-                    <ElTableColumn width="180" prop="date" label="发布时间" align="center"/>
-                    <ElTableColumn width="120" label="操作" align="center" fixed="right">
+                    <ElTableColumn width="180" prop="publishTime" label="发布时间" align="center"/>
+                    <ElTableColumn width="180" label="操作" align="center" fixed="right">
                         <template #default="scope">
                             <ElButton
                                 class="btn-narrow"
@@ -154,63 +154,23 @@
                     :pager-option="pager"/>
             </div>
         </div>
-
-        <!-- 发布新帖对话框 -->
-        <ElDialog
-            center
-            title="发布新帖"
-            v-model="isShowDialogPost"
-            width="60%"
-            :before-close="closePostDialog">
-            <ElForm
-                :model="formPost"
-                :rules="postRules"
-                size="default"
-                ref="refPostForm"
-                label-width="100px">
-                <ElFormItem label="标题" prop="title">
-                    <ElInput v-model="formPost.title" placeholder="请输入帖子标题"/>
-                </ElFormItem>
-                <ElFormItem label="分类" prop="category">
-                    <ElSelect v-model="formPost.category" placeholder="请选择分类">
-                        <ElOption label="路线讨论" value="route"></ElOption>
-                        <ElOption label="经验分享" value="experience"></ElOption>
-                        <ElOption label="问题求助" value="question"></ElOption>
-                        <ElOption label="其他" value="other"></ElOption>
-                    </ElSelect>
-                </ElFormItem>
-                <ElFormItem label="关联路线">
-                    <ElInput v-model="formPost.routeName" placeholder="可选：输入路线名称"/>
-                </ElFormItem>
-                <ElFormItem label="内容" prop="content">
-                    <ElInput
-                        type="textarea"
-                        placeholder="支持 Markdown 格式"
-                        :rows="10"
-                        v-model="formPost.content"/>
-                </ElFormItem>
-            </ElForm>
-            <template #footer class="dialog-footer">
-                <ElButton @click="clearPostForm" type="warning" icon="RefreshLeft">清空</ElButton>
-                <ElButton @click="closePostDialog" icon="Close">取 消</ElButton>
-                <ElButton type="primary" @click="submitPost" icon="Check">发布</ElButton>
-            </template>
-        </ElDialog>
     </div>
 </template>
 
 <script lang="ts" setup>
 import {useProjectStore} from "@/pinia";
-import {computed, onMounted, reactive, ref} from "vue";
+import {onMounted, ref} from "vue";
 import {useRouter} from "vue-router";
-import {ElMessage, ElMessageBox, FormRules} from "element-plus";
+import {ElMessage, ElMessageBox} from "element-plus";
 import FooterPagination from "@/layout/FooterPagination.vue";
 import Toolbar from "@/layout/Toolbar.vue";
+import forumApi from "@/api/forumApi.ts";
+import userApi from "@/api/userApi.ts";
+import routeApi from "@/api/routeApi.ts";
 
 const store = useProjectStore()
 const router = useRouter()
 
-const refPostForm = ref()
 const isLoading = ref(false)
 const tableData = ref([])
 const isShowDialogPost = ref(false)
@@ -218,26 +178,17 @@ const isShowDialogPost = ref(false)
 // 热门主题数据（静态数据）
 const hotTopics = ref([
     {
-        id: 1,
+        luntanId: 1,
         title: "分享一条绝美的济南山区路线，适合春季骑行",
         author: "骑行者小明",
-        date: "2025-01-15 10:30",
+        publishTime: "2025-01-15 10:30",
         views: 1250,
         replies: 45,
         likes: 128,
         routeName: "济南山区环线",
-        content: "这条路线经过多个风景点，路况良好，非常适合春季骑行。沿途有樱花、桃花，美不胜收..."
-    },
-    {
-        id: 2,
-        title: "新手求问：首次长途骑行需要注意什么？",
-        author: "新手小白",
-        date: "2025-01-14 15:20",
-        views: 980,
-        replies: 32,
-        likes: 56,
-        routeName: null,
-        content: "准备进行第一次长途骑行，想请教有经验的骑友，需要做哪些准备工作？装备、路线选择、注意事项..."
+        content: "这条路线经过多个风景点，路况良好，非常适合春季骑行。沿途有樱花、桃花，美不胜收...",
+        uid: 1,
+        routerId: 3
     }
 ])
 
@@ -249,17 +200,11 @@ const formPost = ref({
     content: ''
 })
 
-const postRules = reactive<FormRules>({
-    title: [{required: true, message: '请输入帖子标题', trigger: 'blur'}],
-    category: [{required: true, message: '请选择分类', trigger: 'blur'}],
-    content: [{required: true, message: '请输入内容', trigger: 'blur'}]
-})
-
 // 分页
 const pager = ref({
-    pageSize: 20,
-    pageNo: 1,
-    total: 0
+  pageNo: 1,
+  pageSize: 20,
+  total: 0
 })
 
 const formSearch = ref({
@@ -267,114 +212,33 @@ const formSearch = ref({
     category: ''
 })
 
-// 表格数据（静态数据）
-const initTableData = () => {
-    tableData.value = [
-        {
-            id: 1,
-            title: "分享一条绝美的济南山区路线，适合春季骑行",
-            author: "骑行者小明",
-            date: "2025-01-15 10:30:00",
-            views: 1250,
-            replies: 45,
-            likes: 128,
-            category: "route",
-            routeName: "济南山区环线",
-            lastReplyTime: "2025-01-16 09:15",
-            lastReplyUser: "骑行爱好者",
-            isTop: true,
-            uid: 1
-        },
-        {
-            id: 2,
-            title: "新手求问：首次长途骑行需要注意什么？",
-            author: "新手小白",
-            date: "2025-01-14 15:20:00",
-            views: 980,
-            replies: 32,
-            likes: 56,
-            category: "question",
-            routeName: null,
-            lastReplyTime: "2025-01-15 20:30",
-            lastReplyUser: "老骑友",
-            isTop: false,
-            uid: 2
-        },
-        {
-            id: 3,
-            title: "我的骑行装备清单分享",
-            author: "装备达人",
-            date: "2025-01-13 11:00:00",
-            views: 756,
-            replies: 28,
-            likes: 89,
-            category: "experience",
-            routeName: null,
-            lastReplyTime: "2025-01-14 16:45",
-            lastReplyUser: "骑行者",
-            isTop: false,
-            uid: 3
-        },
-        {
-            id: 4,
-            title: "关于路线A的一些建议和改进",
-            author: "路线规划师",
-            date: "2025-01-12 14:30:00",
-            views: 632,
-            replies: 15,
-            likes: 42,
-            category: "route",
-            routeName: "路线A",
-            lastReplyTime: "2025-01-13 10:20",
-            lastReplyUser: "路线创建者",
-            isTop: false,
-            uid: 4
-        },
-        {
-            id: 5,
-            title: "有没有适合夜骑的路线推荐？",
-            author: "夜骑爱好者",
-            date: "2025-01-11 19:45:00",
-            views: 543,
-            replies: 21,
-            likes: 35,
-            category: "question",
-            routeName: null,
-            lastReplyTime: "2025-01-12 08:30",
-            lastReplyUser: "夜骑专家",
-            isTop: false,
-            uid: 5
-        }
-    ]
-    pager.value.total = tableData.value.length
-}
-
 onMounted(() => {
-    initTableData()
+    getForumList()
+    getHotForumList()
 })
 
-function getCategoryType(category: string) {
+function getCategoryType(category: number) {
     const map = {
-        'route': 'primary',
-        'experience': 'success',
-        'question': 'warning',
-        'other': 'info'
+        1: 'primary',
+        2: 'success',
+        3: 'warning',
+        4: 'info'
     }
     return map[category] || 'info'
 }
 
-function getCategoryName(category: string) {
+function getCategoryName(category: number) {
     const map = {
-        'route': '路线讨论',
-        'experience': '经验分享',
-        'question': '问题求助',
-        'other': '其他'
+        1: '路线讨论',
+        2: '经验分享',
+        3: '问题求助',
+        4: '其他'
     }
     return map[category] || '其他'
 }
 
 function search() {
-    initTableData()
+  getForumList()
 }
 
 function viewTopic(id: number) {
@@ -398,29 +262,8 @@ function clearPostForm() {
     }
 }
 
-function closePostDialog(done?: () => void) {
-    ElMessageBox.confirm('确认关闭？')
-        .then(() => {
-            isShowDialogPost.value = false
-            if (done) done()
-        })
-        .catch(() => {})
-}
-
-function submitPost() {
-    refPostForm.value.validate((valid: boolean) => {
-        if (valid) {
-            // 静态演示，不实际提交
-            ElMessage.success('发布成功！(静态演示)')
-            isShowDialogPost.value = false
-            clearPostForm()
-            initTableData()
-        }
-    })
-}
-
 function pageChange() {
-    initTableData()
+  getForumList()
 }
 
 function deleteTopic(topic: any) {
@@ -433,6 +276,50 @@ function deleteTopic(topic: any) {
         initTableData()
     })
 }
+
+function getForumList() {
+  forumApi.forumList({
+    keyword: formSearch.value.keyword,
+    category: formSearch.value.category,
+    pageNo: pager.value.pageNo,
+    pageSize: pager.value.pageSize
+  }).then(res => {
+    tableData.value = res.data.list
+    tableData.value.map(item => {
+      userApi.getAvatarAndNickname(item.uid).then(_res => {
+        item.author = _res.data.nickname
+      })
+    })
+    tableData.value.map(item => {
+      routeApi.detail({ id: item.routerId }).then(_res => {
+        item.routeName = _res.data.name
+      })
+    })
+  })
+}
+
+function getHotForumList() {
+  forumApi.forumList({
+    keyword: formSearch.value.keyword,
+    category: formSearch.value.category,
+    pageNo: pager.value.pageNo,
+    pageSize: pager.value.pageSize,
+    isHot: true // 直接写死
+  }).then(res => {
+    hotTopics.value = res.data.list
+    hotTopics.value.map(item => {
+      userApi.getAvatarAndNickname(item.uid).then(_res => {
+        item.author = _res.data.nickname
+      })
+    })
+    hotTopics.value.map(item => {
+      routeApi.detail({ id: item.routerId }).then(_res => {
+        item.routeName = _res.data.name
+      })
+    })
+  })
+}
+
 </script>
 
 <style lang="scss" scoped>

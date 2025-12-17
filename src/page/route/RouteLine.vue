@@ -93,13 +93,13 @@ const isComponentMounted = ref(true)
 onMounted(() => {
     AMapLoader
         .load({
-            key: key_web_js, // 开发应用的 ID
-            version: "2.0",   // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
+            key: key_web_js,      // 开发应用的 ID
+            version: "2.0",       // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
             plugins: [
-                'AMap.ToolBar', // 缩放按钮
-                'AMap.Scale', // 比例尺
-                'AMap.DragRoute', // 拖拽路线
-                'AMap.Driving', // 导航
+                'AMap.ToolBar',     // 缩放按钮
+                'AMap.Scale',       // 比例尺
+                'AMap.DragRoute',   // 拖拽路线
+                'AMap.Driving',     // 导航
             ],
         })
         .then(mapItem => {

@@ -68,7 +68,7 @@ export interface ListRequest {
 
 export interface ListResponse {
     list: MapPointerAndUser[];
-    pager: Pager
+    pager: Pager;
 }
 
 export default {
