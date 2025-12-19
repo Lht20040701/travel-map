@@ -98,7 +98,8 @@ function login() {
                 res.data.phone,
                 res.data.avatar,
                 res.data.password,
-                res.data.group_id,
+                // res.data.group_id,
+                res.data.groupId,
                 res.data.city,
                 res.data.geolocation,
             )
