@@ -100,7 +100,7 @@ const FIXED_ROUTES: Array<RouteRecordRaw> = [
         meta: {title: '论坛讨论', showInMenu: true, icon: 'ChatLineRound'},
         children: [
             {name: 'ForumList', path: 'list', meta: {title: '论坛列表', showInMenu: true, icon: 'List'}, component: () => import('./page/forum/ForumList.vue')},
-            {name: 'ForumCreate', path: 'create', meta: {title: '发布帖子', showInMenu: false, icon: 'Plus'}, component: () => import('./page/forum/ForumCreate.vue')},
+            {name: 'ForumCreate', path: 'create', meta: {title: '发布帖子', showInMenu: true, icon: 'Plus'}, component: () => import('./page/forum/ForumCreate.vue')},
             {name: 'ForumDetail', path: 'detail', meta: {title: '主题详情', showInMenu: false, icon: 'Document'}, component: () => import('./page/forum/ForumDetail.vue')},
         ]
     },

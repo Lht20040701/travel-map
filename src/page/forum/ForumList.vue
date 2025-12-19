@@ -147,7 +147,8 @@
                                 @click="viewTopic(scope.row.luntanId)"
                                 size="small"
                                 plain
-                                icon="View">查看</ElButton>
+                                icon="View"
+                            >查看</ElButton>
                             <ElButton
                                 class="btn-narrow"
                                 type="danger"
@@ -155,7 +156,8 @@
                                 @click="deleteTopic(scope.row)"
                                 size="small"
                                 plain
-                                icon="Delete">删除</ElButton>
+                                icon="Delete"
+                            >删除</ElButton>
                         </template>
                     </ElTableColumn>
                 </ElTable>
@@ -251,13 +253,17 @@ function pageChange() {
   getForumList()
 }
 
-function deleteTopic(topic: any) {
+function deleteTopic(topic) {
     ElMessageBox.confirm(`删除主题 "${topic.title}"`, '删除', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
     }).then(() => {
-        ElMessage.success('删除成功！(静态演示)')
+      forumApi.deleteForum(topic.luntanId)
+          .then(res => {
+            ElMessage.success('删除成功')
+            getForumList()
+          })
     })
 }
 

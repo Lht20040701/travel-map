@@ -40,5 +40,8 @@ export default {
     },
     addForum(requestData) {
         return request('post', null, requestData, false, 'forum/add')
-    }
+    },
+    deleteForum(luntanId) {
+        return request('delete', null, null, false, `forum/delete/${luntanId}`)
+    },
 }
