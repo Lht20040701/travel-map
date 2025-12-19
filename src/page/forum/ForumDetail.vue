@@ -506,7 +506,7 @@ function pageChange() {
     padding: 20px 0;
     line-height: 1.8;
     color: $text-main;
-    border-top: 1px solid $border-normal;
+    //border-top: 1px solid $border-normal;
     border-bottom: 1px solid $border-normal;
 }
 
