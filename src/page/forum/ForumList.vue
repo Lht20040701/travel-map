@@ -133,8 +133,8 @@
                     <ElTableColumn width="150" prop="lastestReply" label="最后回复" align="center">
                         <template #default="scope">
                             <div class="last-reply">
-                                <div class="date">{{ scope.row.latestReply }}</div>
-                                <div class="user" v-if="scope.row.lastReplyUser">{{ scope.row.latestReply }}</div>
+                                <div class="date" v-if="scope.row.latestReply">{{ scope.row.latestReply }}</div>
+                                <div class="date" v-else>-</div>
                             </div>
                         </template>
                     </ElTableColumn>
@@ -290,9 +290,11 @@ function getForumList() {
         })
       })
       tableData.value.map(item => {
-        routeApi.detail({ id: item.routerId }).then(_res => {
-          item.routeName = _res.data.name
-        })
+        if (item.routerId) {
+          routeApi.detail({ id: item.routerId }).then(_res => {
+            item.routeName = _res.data.name
+          })
+        }
       })
     })
   })
