@@ -75,6 +75,18 @@
                 <h3 class="section-title">
                     <ElIcon><List /></ElIcon>
                     全部主题
+                  <el-dropdown>
+                    <el-button type="success">
+                      {{ rankRule.label }}
+                    </el-button>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item @click="rankRule.rankTag = 0; rankRule.label = '默认'">默认</el-dropdown-item>
+                        <el-dropdown-item @click="rankRule.rankTag = 1; rankRule.label = '按浏览量'">按浏览量</el-dropdown-item>
+                        <el-dropdown-item @click="rankRule.rankTag = 2; rankRule.label = '按点赞数'">按点赞数</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
                 </h3>
                 <ElTable
                     class="table-narrow"
@@ -159,7 +171,7 @@
 
 <script lang="ts" setup>
 import {useProjectStore} from "@/pinia";
-import {onMounted, ref} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {useRouter} from "vue-router";
 import {ElMessage, ElMessageBox} from "element-plus";
 import FooterPagination from "@/layout/FooterPagination.vue";
@@ -172,24 +184,16 @@ const store = useProjectStore()
 const router = useRouter()
 
 const isLoading = ref(false)
+// 列表数据
 const tableData = ref([])
 
-// 热门主题数据（静态数据）
-const hotTopics = ref([
-    {
-        luntanId: 1,
-        title: "分享一条绝美的济南山区路线，适合春季骑行",
-        author: "骑行者小明",
-        publishTime: "2025-01-15 10:30",
-        views: 1250,
-        replies: 45,
-        likes: 128,
-        routeName: "济南山区环线",
-        content: "这条路线经过多个风景点，路况良好，非常适合春季骑行。沿途有樱花、桃花，美不胜收...",
-        uid: 1,
-        routerId: 3
-    }
-])
+const rankRule = ref({
+  label: '默认',
+  rankTag: 0
+})
+
+// 热门主题数据
+const hotTopics = ref([])
 
 // 分页
 const pager = ref({
@@ -254,7 +258,6 @@ function deleteTopic(topic: any) {
         type: 'warning'
     }).then(() => {
         ElMessage.success('删除成功！(静态演示)')
-        initTableData()
     })
 }
 
@@ -265,15 +268,31 @@ function getForumList() {
     pageNo: pager.value.pageNo,
     pageSize: pager.value.pageSize
   }).then(res => {
-    tableData.value = res.data.list
-    tableData.value.map(item => {
-      userApi.getAvatarAndNickname(item.uid).then(_res => {
-        item.author = _res.data.nickname
+    new Promise(resolve => {
+      if (rankRule.value.rankTag === 1) {
+        res.data.list.sort((a, b) => {
+          return b.views - a.views
+        })
+      } else if (rankRule.value.rankTag === 2) {
+        res.data.list.sort((a, b) => {
+          return b.likes - a.likes
+        })
+      }
+      res.data.list.sort((a, b) => {
+        return b.isTop - a.isTop
       })
-    })
-    tableData.value.map(item => {
-      routeApi.detail({ id: item.routerId }).then(_res => {
-        item.routeName = _res.data.name
+      resolve()
+    }).then(() => {
+      tableData.value = res.data.list
+      tableData.value.map(item => {
+        userApi.getAvatarAndNickname(item.uid).then(_res => {
+          item.author = _res.data.nickname
+        })
+      })
+      tableData.value.map(item => {
+        routeApi.detail({ id: item.routerId }).then(_res => {
+          item.routeName = _res.data.name
+        })
       })
     })
   })
@@ -300,6 +319,10 @@ function getHotForumList() {
     })
   })
 }
+
+watch(rankRule.value, () => {
+  getForumList()
+})
 
 </script>
 

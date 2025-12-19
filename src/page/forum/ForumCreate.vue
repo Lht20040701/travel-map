@@ -5,9 +5,10 @@
                 <ElButton @click="goBack" icon="ArrowLeft">返回列表</ElButton>
             </template>
             <template #center>
-                <div class="title">发布新帖子</div>
             </template>
-            <template #right></template>
+            <template #right>
+              <div class="title">发布新帖子</div>
+            </template>
         </Toolbar>
 
         <div class="create-content">
@@ -95,7 +96,7 @@
                     <h3>
                         <i class="el-icon-view"></i>
                         预览效果
-                        <span class="preview-hint" v-if="!formPost.content">(填写内容后显示预览)</span>
+                        <span class="preview-hint" v-if="!formPost.content">(填写内容后显示预览，效果仅供参考)</span>
                     </h3>
                 </div>
                 <div class="preview-container">
