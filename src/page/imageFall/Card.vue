@@ -1,7 +1,9 @@
 <template>
   <article
       class="card"
+      :class="{ 'card--link': canJump }"
       :data-id="item.id"
+      @click="handleClick"
   >
     <div
         class="body"
@@ -47,7 +49,8 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref } from 'vue'
+import { computed, onBeforeMount, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import type { ItemOption } from './imageFallInterface'
 
 const props = withDefaults(
@@ -64,8 +67,20 @@ const props = withDefaults(
     }
 )
 
+const router = useRouter()
 const loaded = ref(false)
 const height = ref('auto')
+
+const canJump = computed(() => props.item && props.item.luntanId !== null && props.item.luntanId !== undefined)
+
+const handleClick = () => {
+  if (!canJump.value) return
+  // 跳转到论坛详情页（与 ForumList 中保持一致）
+  router.push({
+    name: 'ForumDetail',
+    query: { luntanId: props.item.luntanId }
+  })
+}
 
 onBeforeMount(() => {
   if (!props.noImage) {
@@ -96,6 +111,8 @@ onBeforeMount(() => {
 
 <style scoped lang="scss">
 .card {
+  position: relative;
+  z-index: 0;
   display: flex;
   flex-direction: column-reverse;
   width: v-bind(width);
@@ -104,6 +121,33 @@ onBeforeMount(() => {
   background: white;
   border: 1px solid #e3e8f7;
   border-radius: 10px;
+
+  &.card--link {
+    cursor: pointer;
+    overflow: visible;
+    border-color: transparent;
+    background: transparent;
+  }
+
+  &.card--link::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: linear-gradient(120deg, #ff4d4f, #40a9ff, #73d13d, #faad14, #ff4d4f);
+    background-size: 300% 300%;
+    animation: rgb-border 4s linear infinite;
+    z-index: -1;
+  }
+
+  &.card--link::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 10px;
+    background: #ffffff;
+    z-index: -1;
+  }
 
   .cover {
     display: flex;
@@ -172,6 +216,18 @@ onBeforeMount(() => {
         font-size: 12px;
       }
     }
+  }
+}
+
+@keyframes rgb-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
 .v-enter-active,
