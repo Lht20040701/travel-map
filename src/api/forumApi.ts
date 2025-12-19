@@ -44,4 +44,7 @@ export default {
     deleteForum(luntanId) {
         return request('delete', null, null, false, `forum/delete/${luntanId}`)
     },
+    toggleForumTop(params) {
+        return request('put', params, null, false, 'forum/toggleTop')
+    }
 }

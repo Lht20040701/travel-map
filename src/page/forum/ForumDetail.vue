@@ -12,7 +12,7 @@
                         @click="toggleTop"
                         v-if="store.isAdmin"
                     >
-                        {{ topic.isTop === 1 ? '取消置顶' : '置顶' }}
+                        {{ topic.isTop === true ? '取消置顶' : '置顶' }}
                     </ElButton>
                     <ElButton
                         type="danger"
@@ -372,8 +372,13 @@ function toggleLike() {
 }
 
 function toggleTop() {
-    topic.value.isTop = topic.value.isTop === 1 ? 0 : 1
-    ElMessage.success(topic.value.isTop === 1 ? '已置顶' : '已取消置顶')
+    topic.value.isTop = !topic.value.isTop
+    forumApi.toggleForumTop({
+      luntanId: topic.value.luntanId,
+      isTop: topic.value.isTop
+    }).then(res => {
+      ElMessage.success(res.message)
+    })
 }
 
 function deleteTopic() {
@@ -382,7 +387,11 @@ function deleteTopic() {
         cancelButtonText: '取消',
         type: 'warning'
     }).then(() => {
-        ElMessage.success('删除成功！(静态演示)')
+      forumApi.deleteForum(topic.value.luntanId)
+          .then(res => {
+            ElMessage.success('删除成功')
+            getForumList()
+          })
         router.push({ name: 'ForumList' })
     })
 }
