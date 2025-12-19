@@ -5,4 +5,5 @@ export default {
     modify(requestData){return request('put', null, requestData, false,  'map-route/modify')},
     delete(requestData){return request('delete', null, requestData, false, 'map-route/delete')},
     detail(params){return request('get', params, null, false, 'map-route/detail')},
+    noUseRouteMyself(){return request('get', null, null, false, 'map-route/no-use-myself')}
 }

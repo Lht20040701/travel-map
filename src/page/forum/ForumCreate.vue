@@ -50,16 +50,24 @@
                     </ElFormItem>
 
                     <ElFormItem label="关联路线">
-                        <ElInput
-                            v-model="formPost.routerId"
-                            placeholder="请输入路线ID（可选）"
-                            type="number"
-                            style="width: 260px"
-                            clearable
+<!--                        <ElInput-->
+<!--                            v-model="formPost.routerId"-->
+<!--                            placeholder="请输入路线ID（可选）"-->
+<!--                            type="number"-->
+<!--                            style="width: 260px"-->
+<!--                            clearable-->
+<!--                        />-->
+                      <el-select v-model="formPost.routerId" placeholder="只展示您未关联过的路线" style="width: 260px">
+                        <el-option
+                            v-for="item in userNoUseRoute"
+                            :key="item.id"
+                            :label="item.name"
+                            :value="item.id"
                         />
+                      </el-select>
                     </ElFormItem>
 
-                    <ElFormItem label="置顶">
+                    <ElFormItem v-if="store.isAdmin" label="置顶">
                         <ElSwitch v-model="formPost.isTop" />
                     </ElFormItem>
 
@@ -133,19 +141,22 @@
 </template>
 
 <script lang="ts" setup>
-import {reactive, ref, computed} from "vue";
+import {reactive, ref, computed, onMounted} from "vue";
 import {useRouter} from "vue-router";
 import {ElMessage, FormRules} from "element-plus";
 import Toolbar from "@/layout/Toolbar.vue";
 import {useProjectStore} from "@/pinia";
 import forumApi from "@/api/forumApi.ts";
 import {marked} from "marked";
+import routeApi from "@/api/routeApi.ts";
 
 const router = useRouter()
 const store = useProjectStore()
 
 const refForm = ref()
 const isSubmitting = ref(false)
+
+const userNoUseRoute = ref([])
 
 const formPost = reactive({
     title: '',
@@ -154,6 +165,8 @@ const formPost = reactive({
     isTop: false,
     content: ''
 })
+
+console.log(store.isAdmin)
 
 const rules = reactive<FormRules>({
     title: [
@@ -241,6 +254,17 @@ function handleReset() {
 function goBack() {
     router.push({ name: 'ForumList' })
 }
+
+function getAllUserNoUseRouter() {
+  routeApi.noUseRouteMyself()
+  .then(res => {
+    userNoUseRoute.value = res.data
+  })
+}
+
+onMounted(() => {
+  getAllUserNoUseRouter()
+})
 </script>
 
 <style lang="scss" scoped>
