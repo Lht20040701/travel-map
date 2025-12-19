@@ -111,7 +111,7 @@
                         />
                         <div class="comment-actions">
                             <ElButton @click="clearComment" size="small">清空</ElButton>
-                            <ElButton type="primary" @click="submitComment" icon="Promotion">发表评论</ElButton>
+                            <ElButton type="primary" @click="submitComment" icon="Promotion" size="small">发表评论</ElButton>
                         </div>
                     </div>
                 </div>
@@ -156,6 +156,25 @@
                             </div>
                             <div class="comment-body markdown" v-html="commentContentHtml(item.comment.content)"></div>
 
+                            <!-- 内嵌回复编辑框（回复顶层评论时显示在这里） -->
+                            <div
+                                v-if="replyTarget && replyTarget.commentId === item.comment.commentId"
+                                class="reply-editor"
+                            >
+                                <ElInput
+                                    v-model="replyContent"
+                                    type="textarea"
+                                    :rows="3"
+                                    placeholder="回复内容..."
+                                />
+                                <div class="reply-editor-actions">
+                                    <ElButton size="small" @click="cancelReply">取消</ElButton>
+                                    <ElButton type="primary" size="small" @click="submitReply(item)">
+                                        发送回复
+                                    </ElButton>
+                                </div>
+                            </div>
+
                             <!-- 回复列表 -->
                             <div v-if="item.replies && item.replies.length > 0" class="comment-replies">
                                 <div
@@ -175,6 +194,13 @@
                                             <span class="reply-author">{{ getUserInfo(reply.uid, 'nickname') }}</span>
                                             <span class="reply-date">{{ reply.commentTime }}</span>
                                             <ElButton
+                                                type="text"
+                                                size="small"
+                                                @click="replyToComment(reply)"
+                                            >
+                                                回复
+                                            </ElButton>
+                                            <ElButton
                                                 type="danger"
                                                 size="small"
                                                 text
@@ -184,7 +210,27 @@
                                                 删除
                                             </ElButton>
                                         </div>
-                                        <div class="reply-body" v-html="commentContentHtml(reply.content)"></div>
+
+                                      <div class="reply-body" v-html="commentContentHtml(reply.content)"></div>
+
+                                      <!-- 内嵌回复编辑框（回复某条回复时显示在该回复下面） -->
+                                      <div
+                                        v-if="replyTarget && replyTarget.commentId === reply.commentId"
+                                        class="reply-editor"
+                                      >
+                                        <ElInput
+                                          v-model="replyContent"
+                                          type="textarea"
+                                          :rows="3"
+                                          placeholder="回复内容..."
+                                        />
+                                        <div class="reply-editor-actions">
+                                          <ElButton size="small" @click="cancelReply">取消</ElButton>
+                                          <ElButton type="primary" size="small" @click="submitReply(item)">
+                                            发送回复
+                                          </ElButton>
+                                        </div>
+                                      </div>
                                     </div>
                                 </div>
                             </div>
@@ -278,6 +324,10 @@ const commentPager = ref({
     pageNo: 1,
     total: 0
 })
+
+// 回复相关状态
+const replyTarget = ref<any | null>(null)
+const replyContent = ref('')
 
 onMounted(() => {
     commentPager.value.total = comments.value.length
@@ -374,26 +424,45 @@ function clearComment() {
 }
 
 function replyToComment(comment: any) {
-    // 简单的回复功能，实际可以实现更复杂的回复UI
-    const replyContent = prompt(`回复 ${comment.author}:`)
-    if (replyContent && replyContent.trim()) {
-        const reply = {
-            commentId: Date.now(),
-            luntanId: topic.value.luntanId,
-            content: replyContent,
-            uid: store.authorization?.uid || 999,
-            parentId: comment.commentId, // 回复的父评论id
-            commentTime: new Date().toISOString().replace('T', ' ').slice(0, 19),
-            author: store.authorization?.nickname || '当前用户' // 需要从uid关联获取或后端返回
-        }
+    // 打开内嵌回复编辑框，并预填「回复 @用户名：」
+    const nickname = getUserInfo(comment.uid, 'nickname') || '该用户'
+    replyTarget.value = comment
+    replyContent.value = `回复 @${nickname}：`
+}
 
-        if (!comment.replies) {
-            comment.replies = []
-        }
-        comment.replies.push(reply)
-        topic.value.replies++
-        ElMessage.success('回复成功！(静态演示)')
+function cancelReply() {
+    replyTarget.value = null
+    replyContent.value = ''
+}
+
+function submitReply(itemWrapper: any) {
+    if (!replyTarget.value) {
+        return
     }
+    if (!replyContent.value.trim()) {
+        ElMessage.warning('请输入回复内容')
+        return
+    }
+
+    const reply = {
+        commentId: Date.now(),
+        luntanId: topic.value.luntanId,
+        content: replyContent.value,
+        uid: store.authorization?.uid || 999,
+        parentId: replyTarget.value.commentId, // 回复的父评论id
+        commentTime: new Date().toISOString().replace('T', ' ').slice(0, 19),
+        author: store.authorization?.nickname || '当前用户' // 需要从uid关联获取或后端返回
+    }
+
+    if (!itemWrapper.replies) {
+        itemWrapper.replies = []
+    }
+    itemWrapper.replies.push(reply)
+    topic.value.replies++
+
+    replyTarget.value = null
+    replyContent.value = ''
+    ElMessage.success('回复成功！(静态演示)')
 }
 
 function deleteComment(comment: any) {
@@ -616,6 +685,17 @@ function pageChange() {
         margin-top: 15px;
         padding-left: 20px;
         border-left: 3px solid $border-normal;
+    }
+
+    .reply-editor {
+        margin-top: 10px;
+
+        .reply-editor-actions {
+            margin-top: 8px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
     }
 
     .reply-item {
