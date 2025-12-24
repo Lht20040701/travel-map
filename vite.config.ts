@@ -32,6 +32,10 @@ export default defineConfig({
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/dev/, '/'),
             },
-        }
+        },
+        allowedHosts: [
+            // cpolar内网穿透 (会变，注意更新)
+            '301c241.r40.cpolar.top',
+        ],
     }
 })

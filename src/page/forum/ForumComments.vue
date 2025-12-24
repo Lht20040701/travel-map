@@ -158,6 +158,7 @@ import {marked} from "marked";
 import FooterPagination from "@/layout/FooterPagination.vue";
 import forumApi from "@/api/forumApi.ts";
 import userApi from "@/api/userApi.ts";
+import commentApi from "@/api/commentApi.ts";
 
 const props = defineProps<{
     comments: any[]
@@ -294,29 +295,30 @@ function submitReply(itemWrapper: any) {
     }
 
     const reply = {
-        commentId: Date.now(),
         luntanId: props.luntanId,
         content: replyContent.value,
-        uid: store.authorization?.uid || 999,
-        parentId: replyTarget.value.commentId, // 回复的父评论id
-        commentTime: new Date().toISOString().replace('T', ' ').slice(0, 19),
-        author: store.authorization?.nickname || '当前用户'
+        parentId: itemWrapper.commentId, // 这里的id是主评论的id，不是回复评论的id
     }
 
+    commentApi.addComment(reply)
+
+    // 如果是首条评论，则临时创建一个回复列表
     if (!itemWrapper.replies) {
         itemWrapper.replies = []
     }
+
+    // 这里回复成功后不再刷新列表了
     itemWrapper.replies.push(reply)
 
-    // 通知父组件评论数量变化
-    const totalReplies = props.comments.reduce((sum, item) => {
-        return sum + 1 + (item.replies?.length || 0)
-    }, 0)
-    emit('commentCountChange', totalReplies)
+    // // 通知父组件评论数量变化
+    // const totalReplies = props.comments.reduce((sum, item) => {
+    //     return sum + 1 + (item.replies?.length || 0)
+    // }, 0)
+    // emit('commentCountChange', totalReplies)
 
     replyTarget.value = null
     replyContent.value = ''
-    ElMessage.success('回复成功！(静态演示)')
+    ElMessage.success('回复成功！(开发中)')
 }
 
 function deleteComment(comment: any) {
