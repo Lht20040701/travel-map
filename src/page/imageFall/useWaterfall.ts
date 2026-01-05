@@ -76,7 +76,7 @@ const useWaterfall = (): {
         bottomPreloadScreenCount: 0,
         virtual: true,              // 虚拟化列表
         enableCache: true,          // 启用缓存
-        gap: 15,                    // 每个item的间隔
+        gap: 5,                    // 每个item的间隔
         padding: 15,                // 容器内边距
         itemMinWidth: 220,          // 每个item最小的宽度
         minColumnCount: 2,          // 最大列数
