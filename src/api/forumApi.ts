@@ -46,5 +46,8 @@ export default {
     },
     toggleForumTop(params) {
         return request('put', params, null, false, 'forum/toggleTop')
+    },
+    toggleLike(luntanId) {
+        return request('post', null, null, false, `forum/toggleLike/${luntanId}`)
     }
 }

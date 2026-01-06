@@ -73,7 +73,7 @@
                     <div class="topic-actions-bar">
                         <ElButton
                             type="danger"
-                            :icon="topic.isLiked ? 'StarFilled' : 'Star'"
+                            :icon="isLiked ? 'StarFilled' : 'Star'"
                             @click="toggleLike"
                             plain
                         >
@@ -127,12 +127,15 @@ const topic = ref({})
 const comments = ref([])
 // 用户信息缓存
 const userCache = ref({})
+// 当前用户是否已点赞
+const isLiked = ref(false)
 
 onMounted(() => {
     // 获取论坛数据, 这里的luntanId暂时写死
     forumApi.forumDetail(luntanId.value).then(res => {
         topic.value = res.data.luntan
         comments.value = res.data.comments
+        isLiked.value = res.data.isLiked || false
 
         // 预加载主题作者的信息
         loadUserInfo(topic.value.uid)
@@ -197,9 +200,16 @@ function goBack() {
 }
 
 function toggleLike() {
-    topic.value.isLiked = !topic.value.isLiked
-    topic.value.likes += topic.value.isLiked ? 1 : -1
-    ElMessage.success(topic.value.isLiked ? '已点赞' : '已取消点赞')
+    forumApi.toggleLike(topic.value.luntanId).then(res => {
+        // 切换点赞状态
+        isLiked.value = !isLiked.value
+        // 更新点赞数
+        topic.value.likes += isLiked.value ? 1 : -1
+        // 显示提示信息
+        ElMessage.success(res.message || (isLiked.value ? '已点赞' : '已取消点赞'))
+    }).catch(err => {
+        ElMessage.error('操作失败，请稍后重试')
+    })
 }
 
 function toggleTop() {
