@@ -377,24 +377,56 @@ function submitComment() {
         return
     }
 
-    // 静态演示
-    const comment = {
-        commentId: Date.now(),
+    const commentRequest = {
         luntanId: props.luntanId,
         content: newComment.value,
-        uid: store.authorization?.uid || 999,
-        parentId: 0, // 0-一级评论
-        commentTime: new Date().toISOString().replace('T', ' ').slice(0, 19),
-        author: store.authorization?.nickname || '当前用户',
-        replies: []
+        parentId: 0 // 0 表示一级评论
     }
 
-    const newComments = [...props.comments, comment]
-    emit('update:comments', newComments)
-    emit('commentCountChange', newComments.length)
-    commentPager.value.total = newComments.length
-    newComment.value = ''
-    ElMessage.success('评论发表成功！(静态演示)')
+    commentApi.addComment(commentRequest).then(res => {
+        // 保存当前输入的内容
+        const contentText = newComment.value
+
+        // 构造完整的评论对象
+        const commentEntity = {
+            commentId: res.data.commentId,
+            luntanId: props.luntanId,
+            content: contentText,
+            uid: res.data.uid,
+            parentId: 0,
+            commentTime: res.data.commentTime || new Date().toISOString().replace('T', ' ').slice(0, 19)
+        }
+
+        // 包装成 BundleComment 格式
+        const bundleComment = {
+            comment: commentEntity,
+            replies: []
+        }
+
+        // 添加到评论列表
+        const newComments = [...props.comments, bundleComment]
+        emit('update:comments', newComments)
+        emit('commentCountChange', newComments.length)
+        commentPager.value.total = newComments.length
+
+        // 预加载当前用户信息
+        loadUserInfo(commentEntity.uid)
+
+        // 初始化该评论的分页状态
+        replyPaginationMap.value.set(commentEntity.commentId, {
+            total: 0,
+            pageNo: 1,
+            pageSize: 10,
+            hasMore: false,
+            isExpanded: false
+        })
+
+        // 清空输入框
+        newComment.value = ''
+        ElMessage.success('评论发表成功！')
+    }).catch(err => {
+        ElMessage.error('评论发表失败，请稍后重试')
+    })
 }
 
 function clearComment() {
