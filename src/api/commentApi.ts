@@ -25,5 +25,8 @@ export default {
     },
     getBundleComment(commentId: number) {
         return request('get', null, null, false, `comment/parent/${commentId})`)
+    },
+    getChildComments(parentId: number, pageNo: number = 1, pageSize: number = 10) {
+        return request('get', null, null, false, `comment/child/${parentId}?pageNo=${pageNo}&pageSize=${pageSize}`)
     }
 }

@@ -116,7 +116,7 @@
                                     </ElButton>
                                 </div>
 
-                                <div class="reply-body" v-html="commentContentHtml(reply.content)"></div>
+                                <div class="reply-body markdown" v-html="commentContentHtml(reply.content)"></div>
 
                                 <!-- 内嵌回复编辑框（回复某条回复时显示在该回复下面） -->
                                 <div
@@ -137,6 +137,35 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- 显示更多按钮 -->
+                        <div
+                            v-if="getReplyPagination(item.comment.commentId).hasMore && !getReplyPagination(item.comment.commentId).isExpanded"
+                            class="show-more-replies"
+                        >
+                            <ElButton
+                                type="primary"
+                                link
+                                @click="showMoreReplies(item)"
+                            >
+                                显示全部 {{ getReplyPagination(item.comment.commentId).total }} 条回复
+                            </ElButton>
+                        </div>
+
+                        <!-- 分页组件 -->
+                        <div
+                            v-if="getReplyPagination(item.comment.commentId).isExpanded && getReplyPagination(item.comment.commentId).total > 10"
+                            class="reply-pagination"
+                        >
+                            <el-pagination
+                                :current-page="getReplyPagination(item.comment.commentId).pageNo"
+                                :page-size="10"
+                                :total="getReplyPagination(item.comment.commentId).total"
+                                layout="prev, pager, next"
+                                small
+                                @current-change="(page) => changeReplyPage(item, page)"
+                            />
                         </div>
                     </div>
                 </div>
@@ -187,6 +216,15 @@ const commentPager = ref({
 const replyTarget = ref<any | null>(null)
 const replyContent = ref('')
 
+// 回复分页状态管理（为每个主评论维护独立的分页状态）
+const replyPaginationMap = ref<Map<number, {
+    total: number
+    pageNo: number
+    pageSize: number
+    hasMore: boolean
+    isExpanded: boolean
+}>>(new Map())
+
 // 加载用户信息并缓存
 const loadUserInfo = async (uid: number) => {
     // 如果缓存中已有数据，直接返回
@@ -227,16 +265,107 @@ const preloadUserInfo = () => {
     })
 }
 
+// 初始化回复分页状态
+const initializeReplyPagination = () => {
+    props.comments.forEach(item => {
+        const commentId = item.comment.commentId
+        // 如果还没有初始化过这个评论的分页状态
+        if (!replyPaginationMap.value.has(commentId)) {
+            const repliesCount = item.replies?.length || 0
+            replyPaginationMap.value.set(commentId, {
+                total: repliesCount >= 3 ? repliesCount + 1 : repliesCount, // 如果有3条，说明可能还有更多
+                pageNo: 1,
+                pageSize: 10,
+                hasMore: repliesCount >= 3,
+                isExpanded: false
+            })
+        }
+    })
+}
+
+// 获取某个评论的分页状态
+const getReplyPagination = (commentId: number) => {
+    return replyPaginationMap.value.get(commentId) || {
+        total: 0,
+        pageNo: 1,
+        pageSize: 10,
+        hasMore: false,
+        isExpanded: false
+    }
+}
+
 // 监听 comments 变化，预加载用户信息
 watch(() => props.comments, () => {
     preloadUserInfo()
     commentPager.value.total = props.comments.length
+    initializeReplyPagination()
 }, { immediate: true, deep: true })
 
 onMounted(() => {
     commentPager.value.total = props.comments.length
     preloadUserInfo()
+    initializeReplyPagination()
 })
+
+// 显示更多回复
+const showMoreReplies = async (item: any) => {
+    const commentId = item.comment.commentId
+    const pagination = getReplyPagination(commentId)
+
+    try {
+        const res = await commentApi.getChildComments(commentId, 1, 10)
+        if (res.data) {
+            // 更新回复列表
+            item.replies = res.data.comments
+
+            // 更新分页状态
+            replyPaginationMap.value.set(commentId, {
+                total: res.data.total,
+                pageNo: res.data.pageNo,
+                pageSize: res.data.pageSize,
+                hasMore: res.data.total > 10,
+                isExpanded: true
+            })
+
+            // 预加载用户信息
+            item.replies.forEach((reply: any) => {
+                loadUserInfo(reply.uid)
+            })
+        }
+    } catch (err) {
+        ElMessage.error('加载回复失败')
+    }
+}
+
+// 切换回复页码
+const changeReplyPage = async (item: any, pageNo: number) => {
+    const commentId = item.comment.commentId
+    const pagination = getReplyPagination(commentId)
+
+    try {
+        const res = await commentApi.getChildComments(commentId, pageNo, 10)
+        if (res.data) {
+            // 更新回复列表
+            item.replies = res.data.comments
+
+            // 更新分页状态
+            replyPaginationMap.value.set(commentId, {
+                total: res.data.total,
+                pageNo: res.data.pageNo,
+                pageSize: res.data.pageSize,
+                hasMore: res.data.total > 10,
+                isExpanded: true
+            })
+
+            // 预加载用户信息
+            item.replies.forEach((reply: any) => {
+                loadUserInfo(reply.uid)
+            })
+        }
+    } catch (err) {
+        ElMessage.error('加载回复失败')
+    }
+}
 
 function commentContentHtml(content: string) {
     return marked.parse(content || '')
@@ -273,10 +402,9 @@ function clearComment() {
 }
 
 function replyToComment(comment: any) {
-    // 打开内嵌回复编辑框，并预填「回复 @用户名：」
-    const nickname = getUserInfo(comment.uid, 'nickname') || '该用户'
+    // 打开内嵌回复编辑框，不预填内容，只记录回复目标
     replyTarget.value = comment
-    replyContent.value = `回复 @${nickname}：`
+    replyContent.value = ''
 }
 
 function cancelReply() {
@@ -294,31 +422,42 @@ function submitReply(itemWrapper: any) {
         return
     }
 
-    const reply = {
+    const replyRequest = {
         luntanId: props.luntanId,
         content: replyContent.value,
-        parentId: itemWrapper.commentId, // 这里的id是主评论的id，不是回复评论的id
+        parentId: itemWrapper.comment.commentId, // 主评论的ID，所有回复都挂在主评论下
     }
 
-    commentApi.addComment(reply)
+    commentApi.addComment(replyRequest).then(res => {
+        // 如果是首条评论，则临时创建一个回复列表
+        if (!itemWrapper.replies) {
+            itemWrapper.replies = []
+        }
 
-    // 如果是首条评论，则临时创建一个回复列表
-    if (!itemWrapper.replies) {
-        itemWrapper.replies = []
-    }
+        // 构造完整的回复对象（使用后端返回的数据或本地构造）
+        const newReply = {
+            commentId: res.data?.commentId || Date.now(),
+            luntanId: props.luntanId,
+            content: replyContent.value,
+            uid: store.authorization?.uid,
+            parentId: itemWrapper.comment.commentId,
+            commentTime: new Date().toISOString().replace('T', ' ').slice(0, 19)
+        }
 
-    // 这里回复成功后不再刷新列表了
-    itemWrapper.replies.push(reply)
+        // 添加到回复列表
+        itemWrapper.replies.push(newReply)
 
-    // // 通知父组件评论数量变化
-    // const totalReplies = props.comments.reduce((sum, item) => {
-    //     return sum + 1 + (item.replies?.length || 0)
-    // }, 0)
-    // emit('commentCountChange', totalReplies)
+        // 预加载当前用户信息
+        loadUserInfo(newReply.uid)
 
-    replyTarget.value = null
-    replyContent.value = ''
-    ElMessage.success('回复成功！(开发中)')
+        // 清空回复框
+        replyTarget.value = null
+        replyContent.value = ''
+
+        ElMessage.success('回复成功！')
+    }).catch(err => {
+        ElMessage.error('回复失败，请稍后重试')
+    })
 }
 
 function deleteComment(comment: any) {
@@ -471,10 +610,15 @@ function pageChange() {
     .reply-item {
         display: flex;
         gap: 10px;
-        margin-bottom: 10px;
-        padding: 10px;
+        margin-bottom: 12px;
+        padding: 12px;
         background: $bg-light;
-        border-radius: 6px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background: #f5f7fa;
+        }
     }
 
     .reply-avatar {
@@ -513,9 +657,49 @@ function pageChange() {
     }
 
     .reply-body {
-        font-size: 13px;
-        color: $text-description;
-        line-height: 1.5;
+        font-size: 14px;
+        color: $text-main;
+        line-height: 1.6;
+        word-wrap: break-word;
+
+        :deep(p) {
+            margin: 0;
+        }
+    }
+
+    .show-more-replies {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid $border-light;
+        text-align: center;
+
+        .el-button {
+            font-size: 14px;
+        }
+    }
+
+    .reply-pagination {
+        margin-top: 15px;
+        padding-top: 12px;
+        border-top: 1px solid $border-light;
+        display: flex;
+        justify-content: center;
+
+        :deep(.el-pagination) {
+            .el-pager li {
+                min-width: 28px;
+                height: 28px;
+                line-height: 28px;
+                font-size: 13px;
+            }
+
+            .btn-prev,
+            .btn-next {
+                min-width: 28px;
+                height: 28px;
+                padding: 0 8px;
+            }
+        }
     }
 }
 </style>
