@@ -402,9 +402,10 @@ function clearComment() {
 }
 
 function replyToComment(comment: any) {
-    // 打开内嵌回复编辑框，不预填内容，只记录回复目标
+    // 打开内嵌回复编辑框，并预填「回复 @用户名：」
+    const nickname = getUserInfo(comment.uid, 'nickname') || '该用户'
     replyTarget.value = comment
-    replyContent.value = ''
+    replyContent.value = `回复 @${nickname}：`
 }
 
 function cancelReply() {
