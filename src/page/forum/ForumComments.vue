@@ -2,7 +2,7 @@
     <div class="comments-section">
         <h2 class="comments-title">
             <ElIcon><ChatDotRound /></ElIcon>
-            评论 ({{ comments.length }})
+            评论 ({{ totalCommentCount }})
         </h2>
 
         <!-- 发表评论 -->
@@ -109,7 +109,7 @@
                                         type="danger"
                                         size="small"
                                         text
-                                        @click="deleteReply(reply)"
+                                        @click="deleteReply(reply, item)"
                                         v-if="store.isAdmin || (store.authorization && Number(store.authorization.uid) === reply.uid)"
                                     >
                                         删除
@@ -181,7 +181,7 @@
 
 <script lang="ts" setup>
 import {useProjectStore} from "@/pinia";
-import {onMounted, ref, watch} from "vue";
+import {computed, onMounted, ref, watch} from "vue";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {marked} from "marked";
 import FooterPagination from "@/layout/FooterPagination.vue";
@@ -200,6 +200,20 @@ const emit = defineEmits<{
 }>()
 
 const store = useProjectStore()
+
+// 真实的总评论数（从后端获取）
+const realTotalCommentCount = ref(0)
+
+// 计算总评论数（主评论 + 回复）- 保留作为降级方案
+const totalCommentCount = computed(() => {
+    // 如果从后端获取到了真实数据，使用真实数据；否则使用计算值
+    if (realTotalCommentCount.value > 0) {
+        return realTotalCommentCount.value
+    }
+    return props.comments.reduce((total, item) => {
+        return total + 1 + (item.replies?.length || 0)
+    }, 0)
+})
 
 // 用户信息缓存
 const userCache = ref({})
@@ -266,21 +280,36 @@ const preloadUserInfo = () => {
 }
 
 // 初始化回复分页状态
-const initializeReplyPagination = () => {
-    props.comments.forEach(item => {
+const initializeReplyPagination = async () => {
+    for (const item of props.comments) {
         const commentId = item.comment.commentId
         // 如果还没有初始化过这个评论的分页状态
         if (!replyPaginationMap.value.has(commentId)) {
-            const repliesCount = item.replies?.length || 0
-            replyPaginationMap.value.set(commentId, {
-                total: repliesCount >= 3 ? repliesCount + 1 : repliesCount, // 如果有3条，说明可能还有更多
-                pageNo: 1,
-                pageSize: 10,
-                hasMore: repliesCount >= 3,
-                isExpanded: false
-            })
+            try {
+                // 调用后端接口获取真实的回复数量
+                const res = await commentApi.getChildCommentsCount(commentId)
+                const repliesCount = res.data || 0
+
+                replyPaginationMap.value.set(commentId, {
+                    total: repliesCount,
+                    pageNo: 1,
+                    pageSize: 10,
+                    hasMore: repliesCount > (item.replies?.length || 0),
+                    isExpanded: false
+                })
+            } catch (err) {
+                // 如果接口调用失败，使用本地回复数量作为降级方案
+                const repliesCount = item.replies?.length || 0
+                replyPaginationMap.value.set(commentId, {
+                    total: repliesCount,
+                    pageNo: 1,
+                    pageSize: 10,
+                    hasMore: repliesCount >= 3,
+                    isExpanded: false
+                })
+            }
         }
-    })
+    }
 }
 
 // 获取某个评论的分页状态
@@ -301,11 +330,38 @@ watch(() => props.comments, () => {
     initializeReplyPagination()
 }, { immediate: true, deep: true })
 
+// 监听 luntanId 变化，当 luntanId 有值时获取真实总评论数
+watch(() => props.luntanId, (newLuntanId) => {
+    if (newLuntanId && newLuntanId > 0) {
+        loadRealTotalCommentCount()
+    }
+}, { immediate: true })
+
 onMounted(() => {
     commentPager.value.total = props.comments.length
     preloadUserInfo()
     initializeReplyPagination()
 })
+
+// 加载真实的总评论数
+const loadRealTotalCommentCount = async () => {
+    // 确保 luntanId 有值才发送请求
+    if (!props.luntanId || props.luntanId <= 0) {
+        console.warn('luntanId 无效，跳过获取总评论数:', props.luntanId)
+        return
+    }
+
+    try {
+        const res = await commentApi.getTotalCommentsCount(props.luntanId)
+        realTotalCommentCount.value = res.data || 0
+        // 通知父组件更新评论数
+        emit('commentCountChange', realTotalCommentCount.value)
+    } catch (err) {
+        console.error('获取总评论数失败:', err)
+        // 如果接口调用失败，使用计算的总评论数作为降级方案
+        emit('commentCountChange', totalCommentCount.value)
+    }
+}
 
 // 显示更多回复
 const showMoreReplies = async (item: any) => {
@@ -406,8 +462,10 @@ function submitComment() {
         // 添加到评论列表
         const newComments = [...props.comments, bundleComment]
         emit('update:comments', newComments)
-        emit('commentCountChange', newComments.length)
         commentPager.value.total = newComments.length
+
+        // 更新真实总评论数
+        realTotalCommentCount.value++
 
         // 预加载当前用户信息
         loadUserInfo(commentEntity.uid)
@@ -423,6 +481,10 @@ function submitComment() {
 
         // 清空输入框
         newComment.value = ''
+
+        // 通知父组件更新评论数
+        emit('commentCountChange', realTotalCommentCount.value)
+
         ElMessage.success('评论发表成功！')
     }).catch(err => {
         ElMessage.error('评论发表失败，请稍后重试')
@@ -480,12 +542,18 @@ function submitReply(itemWrapper: any) {
         // 添加到回复列表
         itemWrapper.replies.push(newReply)
 
+        // 更新真实总评论数
+        realTotalCommentCount.value++
+
         // 预加载当前用户信息
         loadUserInfo(newReply.uid)
 
         // 清空回复框
         replyTarget.value = null
         replyContent.value = ''
+
+        // 通知父组件更新评论数
+        emit('commentCountChange', realTotalCommentCount.value)
 
         ElMessage.success('回复成功！')
     }).catch(err => {
@@ -494,40 +562,70 @@ function submitReply(itemWrapper: any) {
 }
 
 function deleteComment(comment: any) {
-    ElMessageBox.confirm('确认删除这条评论？', '删除', {
+    ElMessageBox.confirm('确认删除这条评论？删除后该评论下的所有回复也会被删除。', '删除评论', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
     }).then(() => {
-        const newComments = props.comments.filter(c => c.comment.commentId !== comment.commentId)
-        emit('update:comments', newComments)
-        emit('commentCountChange', newComments.length)
-        commentPager.value.total = newComments.length
-        ElMessage.success('删除成功！(静态演示)')
+        commentApi.deleteComment(comment.commentId).then(res => {
+            // 计算要删除的评论数量（1个主评论 + 它的回复数量）
+            const repliesCount = replyPaginationMap.value.get(comment.commentId)?.total || 0
+            const deletedCount = 1 + repliesCount
+
+            // 从评论列表中移除
+            const newComments = props.comments.filter(c => c.comment.commentId !== comment.commentId)
+            emit('update:comments', newComments)
+            commentPager.value.total = newComments.length
+
+            // 更新真实总评论数
+            realTotalCommentCount.value -= deletedCount
+
+            // 移除该评论的分页状态
+            replyPaginationMap.value.delete(comment.commentId)
+
+            // 通知父组件更新评论数
+            emit('commentCountChange', realTotalCommentCount.value)
+
+            ElMessage.success('删除成功！')
+        }).catch(err => {
+            ElMessage.error('删除失败，请稍后重试')
+        })
     })
 }
 
-function deleteReply(reply: any) {
-    ElMessageBox.confirm('确认删除这条回复？', '删除', {
+function deleteReply(reply: any, item: any) {
+    ElMessageBox.confirm('确认删除这条回复？', '删除回复', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
     }).then(() => {
-        const newComments = props.comments.map(comment => {
-            if (comment.replies) {
-                comment.replies = comment.replies.filter((r: any) => r.commentId !== reply.commentId)
+        commentApi.deleteComment(reply.commentId).then(res => {
+            // 从回复列表中移除
+            if (item.replies) {
+                item.replies = item.replies.filter((r: any) => r.commentId !== reply.commentId)
             }
-            return comment
+
+            // 更新该评论的分页状态（减少总数）
+            const commentId = item.comment.commentId
+            const pagination = getReplyPagination(commentId)
+            if (pagination.total > 0) {
+                replyPaginationMap.value.set(commentId, {
+                    ...pagination,
+                    total: pagination.total - 1,
+                    hasMore: pagination.total - 1 > 10
+                })
+            }
+
+            // 更新真实总评论数
+            realTotalCommentCount.value--
+
+            // 通知父组件更新评论数
+            emit('commentCountChange', realTotalCommentCount.value)
+
+            ElMessage.success('删除成功！')
+        }).catch(err => {
+            ElMessage.error('删除失败，请稍后重试')
         })
-        emit('update:comments', newComments)
-        
-        // 通知父组件评论数量变化
-        const totalReplies = newComments.reduce((sum, item) => {
-            return sum + 1 + (item.replies?.length || 0)
-        }, 0)
-        emit('commentCountChange', totalReplies)
-        
-        ElMessage.success('删除成功！(静态演示)')
     })
 }
 

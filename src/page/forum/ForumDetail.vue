@@ -61,12 +61,12 @@
                             <span class="divider">•</span>
                             <span class="replies">
                                 <ElIcon><ChatDotRound /></ElIcon>
-                                {{ topic.replies }} 回复
+                                {{ topic.replies }} 评论
                             </span>
-                            <span v-if="topic.routerId" class="divider">•</span>
-                            <ElTag v-if="topic.routerId" size="small" type="info" @click="viewRoute">
+                            <span v-if="topic.routeName" class="divider">•</span>
+                            <ElTag v-if="topic.routeName" size="small" type="info" @click="viewRoute">
                                 <ElIcon><Position /></ElIcon>
-                                路线ID: {{ topic.routerId }}
+                                路线: {{ topic.routeName }}
                             </ElTag>
                         </div>
                     </div>
@@ -84,13 +84,6 @@
 
                 <div class="topic-body markdown" v-html="topicContentHtml"></div>
 
-                <div class="topic-footer">
-                    <div class="topic-stats">
-                        <span><ElIcon><View /></ElIcon> {{ topic.views }} 浏览</span>
-                        <span><ElIcon><ChatDotRound /></ElIcon> {{ topic.replies }} 回复</span>
-                        <span><ElIcon><Star /></ElIcon> {{ topic.likes }} 点赞</span>
-                    </div>
-                </div>
             </div>
 
             <!-- 评论区域 -->
@@ -113,6 +106,7 @@ import {marked} from "marked";
 import Toolbar from "@/layout/Toolbar.vue";
 import forumApi from "@/api/forumApi.ts";
 import userApi from "@/api/userApi.ts";
+import routeApi from "@/api/routeApi.ts";
 import ForumComments from "./ForumComments.vue";
 
 const store = useProjectStore()
@@ -139,6 +133,11 @@ onMounted(() => {
 
         // 预加载主题作者的信息
         loadUserInfo(topic.value.uid)
+
+        // 如果有路线ID，加载路线名称
+        if (topic.value.routerId) {
+            loadRouteName(topic.value.routerId)
+        }
     })
 })
 
@@ -158,6 +157,18 @@ const loadUserInfo = async (uid) => {
     console.error('获取用户信息失败:', err)
     userCache.value[uid] = { avatar: '', nickname: '未知用户' }
     return { avatar: '', nickname: '未知用户' }
+  }
+}
+
+// 加载路线名称
+const loadRouteName = async (routerId: number) => {
+  try {
+    const res = await routeApi.detail({ id: routerId })
+    // 将路线名称保存到 topic 对象中
+    topic.value.routeName = res.data.name
+  } catch (err) {
+    console.error('获取路线信息失败:', err)
+    topic.value.routeName = ''
   }
 }
 
@@ -238,8 +249,11 @@ function deleteTopic() {
 
 function viewRoute() {
     if (topic.value.routerId) {
-        // 可以跳转到路线详情页面
-        ElMessage.info('跳转到路线详情 (静态演示)')
+        // 跳转到路线详情页面
+        router.push({
+          name: 'RouteLine',
+          query: { lineId: topic.value.routerId }
+        })
     }
 }
 
@@ -318,25 +332,6 @@ function viewRoute() {
     //border-top: 1px solid $border-normal;
     border-bottom: 1px solid $border-normal;
 }
-
-.topic-footer {
-    margin-top: 20px;
-    padding-top: 15px;
-
-    .topic-stats {
-        display: flex;
-        gap: 20px;
-        font-size: 14px;
-        color: $text-subtitle;
-
-        span {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-    }
-}
-
 
 .topic-actions {
     display: flex;
