@@ -139,6 +139,16 @@ const FIXED_ROUTES: Array<RouteRecordRaw> = [
         meta: {title: '注册', showInMenu: false, icon: 'el-icon-user-solid',},
         component: Register,
     },
+    {
+        name: 'Profile',
+        path: '/profile',
+        meta: {title: '个人信息', showInMenu: true, icon: 'User'},
+        component: Layout,
+        redirect: '/profile/info',
+        children: [
+            {name: 'Info', path: 'info', meta: {title: '个人信息', showInMenu: false, icon: 'el-icon-wind-power'}, component: () => import('./page/Profile.vue')},
+        ]
+    },
     // {
     //     name: 'NoPage', path: '*',
     //     meta: {title: '404', showInMenu: false, icon: 'el-icon-user-solid',},
