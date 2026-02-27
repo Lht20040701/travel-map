@@ -262,13 +262,11 @@ const fetchUnlinkedPosts = async () => {
   try {
     const res = await forumApi.getUnlinkedPosts({
       pageNo: 1,
-      pageSize: 100
+      pageSize: 100,
+      uid: store.authorization.uid
     })
     if (res.data?.list) {
-      // 只显示当前用户的帖子
-      unlinkedPosts.value = res.data.list.filter(
-        (post: LuntanEntity) => post.uid === store.authorization.uid
-      )
+      unlinkedPosts.value = res.data.list
     }
   } catch (err) {
     console.error('获取帖子列表失败：', err)
