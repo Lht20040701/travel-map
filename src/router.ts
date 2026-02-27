@@ -69,10 +69,10 @@ const FIXED_ROUTES: Array<RouteRecordRaw> = [
         ]
     },
     {
-        name: 'Info',
-        path: '/info',
+        name: 'Henan',
+        path: '/henan',
         component: Layout,
-        redirect: '/info/plate',
+        redirect: '/henan/plate',
         meta: {title: '河南信息', showInMenu: true, icon: 'CreditCard' /* 菜单 icon 对应 Element UI 中的 ICON class 名 */},
         children: [
             {name: 'MotorHighway'      , path: 'motor-highway'  , meta: {title: '全国摩托车高速'  , showInMenu: true} , component: () => import('./page/info/motorHighway/MotorHighway.vue')} ,
@@ -81,7 +81,6 @@ const FIXED_ROUTES: Array<RouteRecordRaw> = [
             {name: 'HighwayXueye'      , path: 'highway-xueye'  , meta: {title: '济南籍车辆高速免费' , showInMenu: false} , component: () => import('./page/info/highwayXueye/HighwayXueye.vue')} ,
         ]
     },
-
     {
         name: 'Other',
         path: '/other',
