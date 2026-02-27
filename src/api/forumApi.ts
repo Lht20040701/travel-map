@@ -49,5 +49,9 @@ export default {
     },
     toggleLike(luntanId) {
         return request('post', null, null, false, `forum/toggleLike/${luntanId}`)
+    },
+    // 获取未被关联到图片的帖子列表
+    getUnlinkedPosts(requestData: ForumListRequest): Promise<ServerResponse<ForumList>> {
+        return request('post', null, requestData, false, 'forum/unlinked')
     }
 }

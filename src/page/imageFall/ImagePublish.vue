@@ -22,6 +22,36 @@
           />
         </ElFormItem>
 
+        <ElFormItem label="关联帖子">
+          <ElSelect
+            v-model="formPublish.luntanId"
+            placeholder="可选：关联一个未关联的论坛帖子"
+            clearable
+            filterable
+            :loading="loadingPosts"
+            style="width: 100%"
+          >
+            <ElOption
+              v-for="post in unlinkedPosts"
+              :key="post.luntanId"
+              :label="post.title"
+              :value="post.luntanId"
+            >
+              <div class="post-option">
+                <span class="post-title">{{ post.title }}</span>
+                <span class="post-meta">
+                  <ElTag size="small" type="info">{{ post.views }} 浏览</ElTag>
+                  <ElTag size="small" type="success">{{ post.replies }} 回复</ElTag>
+                </span>
+              </div>
+            </ElOption>
+          </ElSelect>
+          <div class="form-tip">
+            <i class="el-icon-info"></i>
+            关联后，点击图片可跳转到对应的论坛帖子详情页
+          </div>
+        </ElFormItem>
+
         <ElFormItem label="图片" prop="imageFile">
           <div class="upload-area">
             <ElUpload
@@ -124,6 +154,7 @@ import {qiniu_bucket_name, qiniu_img_base_url, thumbnail200_suffix} from "@/mapC
 import {getUploadToken} from "@/api/fileApi.ts";
 import * as qiniu from "qiniu-js";
 import imageFallApi from "@/api/imageFallApi.ts";
+import forumApi, { type LuntanEntity } from "@/api/forumApi.ts";
 
 const router = useRouter()
 const store = useProjectStore()
@@ -132,6 +163,7 @@ const store = useProjectStore()
 const formPublish = reactive({
   title: '',
   imageFile: null as File | null,
+  luntanId: null as number | null,
 })
 
 // 表单验证规则
@@ -154,6 +186,8 @@ const imagePreview = ref<string>('')
 const imageW = ref(300)
 const imageH = ref(400)
 const isSubmitting = ref(false)
+const unlinkedPosts = ref<LuntanEntity[]>([])
+const loadingPosts = ref(false)
 
 // 图片本地上传
 const handleImageChange = (file: any) => {
@@ -219,6 +253,32 @@ const removeImage = () => {
     uploadRef.value.clearFiles()
   }
 }
+
+// 获取未关联的帖子列表
+const fetchUnlinkedPosts = async () => {
+  if (!store.authorization.uid) return
+
+  loadingPosts.value = true
+  try {
+    const res = await forumApi.getUnlinkedPosts({
+      pageNo: 1,
+      pageSize: 100
+    })
+    if (res.data?.list) {
+      // 只显示当前用户的帖子
+      unlinkedPosts.value = res.data.list.filter(
+        (post: LuntanEntity) => post.uid === store.authorization.uid
+      )
+    }
+  } catch (err) {
+    console.error('获取帖子列表失败：', err)
+  } finally {
+    loadingPosts.value = false
+  }
+}
+
+// 组件挂载时获取未关联的帖子列表
+fetchUnlinkedPosts()
 
 // 卡片组件的预览信息
 const previewItem = computed<ItemOption>(() => {
@@ -296,7 +356,8 @@ const submitForm = () => {
           width: previewItem.value.width,
           height: previewItem.value.height,
           uid: store.authorization.uid,
-          views: 0
+          views: 0,
+          luntanId: formPublish.luntanId
         }
 
         imageFallApi.addImage(postData)
@@ -454,6 +515,41 @@ const handleCancel = () => {
             }
           }
         }
+      }
+    }
+
+    // 帖子选择器样式
+    .post-option {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+
+      .post-title {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-right: 12px;
+      }
+
+      .post-meta {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+    }
+
+    .form-tip {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #909399;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      i {
+        font-size: 14px;
       }
     }
   }
