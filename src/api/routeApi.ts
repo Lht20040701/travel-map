@@ -1,4 +1,11 @@
 import {request} from './request'
+
+export interface MyUnusedRouteItem {
+    id: number;
+    name: string;
+    isPublic: number;
+}
+
 export default {
     add(requestData){return request('post', null, requestData, false, 'map-route/add')},
     list(requestData){return request('post', null, requestData, false, 'map-route/list')},

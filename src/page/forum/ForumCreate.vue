@@ -57,14 +57,27 @@
 <!--                            style="width: 260px"-->
 <!--                            clearable-->
 <!--                        />-->
-                      <el-select v-model="formPost.routerId" placeholder="只展示您未关联过的路线" style="width: 260px">
+                      <el-select
+                          v-model="formPost.routerId"
+                          placeholder="展示您未关联过的路线，私有路线不可选"
+                          style="width: 320px"
+                          clearable
+                      >
                         <el-option
                             v-for="item in userNoUseRoute"
                             :key="item.id"
-                            :label="item.name"
+                            :label="item.isPublic === 1 ? item.name : `${item.name}（私有，不可关联）`"
                             :value="item.id"
-                        />
+                            :disabled="item.isPublic !== 1"
+                        >
+                            <div class="route-option" :class="{ 'route-option--disabled': item.isPublic !== 1 }">
+                                <span>{{ item.name }}</span>
+                                <ElTag v-if="item.isPublic === 1" size="small" type="success">公开</ElTag>
+                                <ElTag v-else size="small" type="info">私有，不可关联</ElTag>
+                            </div>
+                        </el-option>
                       </el-select>
+                      <div class="route-tip">论坛帖子只能关联公开路线，私有路线会显示但无法选择。</div>
                     </ElFormItem>
 
                     <ElFormItem v-if="store.isAdmin" label="置顶">
@@ -124,7 +137,7 @@
                                 </h2>
                                 <div class="preview-meta">
                                     <span>作者：{{ store.authorization?.nickname || '当前用户' }}</span>
-                                    <span>关联路线：{{ formPost.routerId || '未关联' }}</span>
+                                    <span>关联路线：{{ selectedRouteLabel }}</span>
                                 </div>
                                 <div class="preview-content markdown" v-html="previewContent"></div>
                             </div>
@@ -148,7 +161,7 @@ import Toolbar from "@/layout/Toolbar.vue";
 import {useProjectStore} from "@/pinia";
 import forumApi from "@/api/forumApi.ts";
 import {marked} from "marked";
-import routeApi from "@/api/routeApi.ts";
+import routeApi, { type MyUnusedRouteItem } from "@/api/routeApi.ts";
 
 const router = useRouter()
 const store = useProjectStore()
@@ -156,7 +169,7 @@ const store = useProjectStore()
 const refForm = ref()
 const isSubmitting = ref(false)
 
-const userNoUseRoute = ref([])
+const userNoUseRoute = ref<MyUnusedRouteItem[]>([])
 
 const formPost = reactive({
     title: '',
@@ -183,6 +196,16 @@ const rules = reactive<FormRules>({
 })
 
 const previewContent = computed(() => marked.parse(formPost.content || '在此编写帖子内容...'))
+const selectedRouteLabel = computed(() => {
+    if (formPost.routerId == null) {
+        return '未关联'
+    }
+    const route = userNoUseRoute.value.find(item => item.id === formPost.routerId)
+    if (!route) {
+        return '未关联'
+    }
+    return route.isPublic === 1 ? route.name : `${route.name}（私有，不可关联）`
+})
 
 function getCategoryType(category: number) {
     const map: Record<number, string> = {
@@ -222,6 +245,12 @@ function handleSubmit() {
 }
 
 async function submitPost() {
+    const selectedRoute = userNoUseRoute.value.find(item => item.id === formPost.routerId)
+    if (selectedRoute && selectedRoute.isPublic !== 1) {
+        ElMessage.warning('私有路线不能关联帖子，请先公开路线')
+        return
+    }
+
     isSubmitting.value = true
     const payload = {
         title: formPost.title,
@@ -310,6 +339,24 @@ onMounted(() => {
         display: flex;
         gap: 10px;
     }
+}
+
+.route-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.route-option--disabled {
+    color: #a8abb2;
+}
+
+.route-tip {
+    margin-top: 6px;
+    color: $text-description;
+    font-size: 12px;
+    line-height: 1.5;
 }
 
 .create-content {
@@ -447,4 +494,3 @@ onMounted(() => {
     }
 }
 </style>
-
