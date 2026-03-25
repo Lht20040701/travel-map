@@ -50,6 +50,7 @@ const useWaterfall = (): {
         loading: boolean
         bottomDistance: number
         onlyImage: boolean
+        floatingInfo: boolean
         topPreloadScreenCount: number
         bottomPreloadScreenCount: number
         virtual: boolean
@@ -88,6 +89,7 @@ const useWaterfall = (): {
         bottomDistance: 160,
         // 是否只展示图片，这是自定义加的一个属性
         onlyImage: false,
+        floatingInfo: true,
         topPreloadScreenCount: 0,
         bottomPreloadScreenCount: 0,
         virtual: true,              // 虚拟化列表
@@ -105,7 +107,8 @@ const useWaterfall = (): {
         let height = 0
         // 当包含图文时，需要单独计算文字部分的高度
         // 文字部分的高度 + 图片的高度 = 真实高度
-        if (!waterfallOption.onlyImage) {
+        // 当前卡片信息改为悬浮在图片上，所以这里不再额外撑高
+        if (!waterfallOption.onlyImage && !waterfallOption.floatingInfo) {
             height = getRealHeight(item, itemWidth)
         }
         // 计算公式：图片原高度 * 缩放比例 + 非文字部分高度
