@@ -50,7 +50,7 @@ function resizeComponents(){
     if (store.isInPortraitMode){
         store.navWidth = store.windowInsets.width
     } else {
-        store.navWidth = 200// 当从移动端切到 PC 时，重新设置 NavMenu 的宽度
+        store.navWidth = store.isNavMenuFold ? 64 : 200// 当从移动端切到 PC 时，重新设置 NavMenu 的宽度
     }
 }
 </script>
