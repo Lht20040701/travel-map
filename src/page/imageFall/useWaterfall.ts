@@ -1,4 +1,4 @@
-import {h, onMounted, onUnmounted, reactive, Ref, render, useTemplateRef} from 'vue'
+import {h, nextTick, onMounted, onUnmounted, reactive, Ref, render, useTemplateRef} from 'vue'
 import Card from './Card.vue'
 import type {VirtualWaterfall} from '@lhlyu/vue-virtual-waterfall'
 import {ItemOption} from '@/page/imageFall/imageFallInterface.ts'
@@ -6,6 +6,9 @@ import imageFallApi from '@/api/imageFallApi.ts'
 
 // 创建一个可复用的 DOM 容器
 let measureDom: HTMLDivElement;
+let scrollContainer: HTMLElement | null = null
+let requestFrameId = 0
+let previousOverscrollBehaviorY = ''
 
 // 计算真实高度函数，这里只计算除了图片的高度
 // 传入realWidth是宽度的变化可能会导致文字部分少一行或者多一行，从而导致高度在变
@@ -24,6 +27,19 @@ function getRealHeight(item: ItemOption, realWidth: number) {
     const height: number = measureDom.firstElementChild!.clientHeight
     // 返回高度
     return height
+}
+
+function getScrollParent(element: HTMLElement | null): HTMLElement {
+    let currentElement = element?.parentElement || null
+    while (currentElement) {
+        const style = window.getComputedStyle(currentElement)
+        const overflowY = style.overflowY
+        if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') {
+            return currentElement
+        }
+        currentElement = currentElement.parentElement
+    }
+    return document.scrollingElement as HTMLElement || document.documentElement
 }
 
 const useWaterfall = (): {
@@ -69,7 +85,7 @@ const useWaterfall = (): {
     // https://github.com/lhlyu/vue-virtual-waterfall
     const waterfallOption = reactive({
         loading: false,
-        bottomDistance: 0,
+        bottomDistance: 160,
         // 是否只展示图片，这是自定义加的一个属性
         onlyImage: false,
         topPreloadScreenCount: 0,
@@ -123,6 +139,18 @@ const useWaterfall = (): {
         data.total = result.data.total
         data.max = result.data.max
         data.list = [...data.list, ...result.data.list]
+        if (data.list.length >= data.total) {
+            data.end = true
+        }
+    }
+
+    function getScrollMetrics() {
+        const container = scrollContainer || document.scrollingElement || document.documentElement
+        return {
+            scrollHeight: container.scrollHeight,
+            scrollTop: container.scrollTop,
+            clientHeight: container.clientHeight
+        }
     }
 
     // 检查是否加载更多
@@ -131,9 +159,7 @@ const useWaterfall = (): {
             return
         }
 
-        const scrollHeight = document.documentElement.scrollHeight
-        const scrollTop = document.documentElement.scrollTop
-        const clientHeight = document.documentElement.clientHeight
+        const {scrollHeight, scrollTop, clientHeight} = getScrollMetrics()
 
         const distanceFromBottom = scrollHeight - scrollTop - clientHeight
 
@@ -142,9 +168,23 @@ const useWaterfall = (): {
             waterfallOption.loading = true
             await loadData()
             waterfallOption.loading = false
+            // 新数据插入后重新检查，避免初次渲染时内容不足一屏
+            queueCheckScrollPosition()
         }
+    }
 
-        requestAnimationFrame(checkScrollPosition)
+    function queueCheckScrollPosition() {
+        if (requestFrameId) {
+            return
+        }
+        requestFrameId = requestAnimationFrame(async () => {
+            requestFrameId = 0
+            await checkScrollPosition()
+        })
+    }
+
+    function onScroll() {
+        queueCheckScrollPosition()
     }
 
     onMounted(async () => {
@@ -153,10 +193,29 @@ const useWaterfall = (): {
         // 将其设置为不可见，避免影响布局或用户体验
         measureDom.style.cssText = 'position: absolute; visibility: hidden; pointer-events: none;';
         document.body.appendChild(measureDom); // 在应用启动时添加到 body 一次
-        await checkScrollPosition()
+
+        await nextTick()
+        const waterfallElement = (vw.value as any)?.$el as HTMLElement | undefined
+        scrollContainer = getScrollParent(waterfallElement || null)
+        previousOverscrollBehaviorY = scrollContainer.style.overscrollBehaviorY
+        scrollContainer.style.overscrollBehaviorY = 'contain'
+        scrollContainer.addEventListener('scroll', onScroll, {passive: true})
+        window.addEventListener('resize', onScroll, {passive: true})
+
+        queueCheckScrollPosition()
     })
 
     onUnmounted(() => {
+        if (requestFrameId) {
+            cancelAnimationFrame(requestFrameId)
+            requestFrameId = 0
+        }
+        if (scrollContainer) {
+            scrollContainer.removeEventListener('scroll', onScroll)
+            scrollContainer.style.overscrollBehaviorY = previousOverscrollBehaviorY
+            scrollContainer = null
+        }
+        window.removeEventListener('resize', onScroll)
         document.body.removeChild(measureDom);
     })
     return {
