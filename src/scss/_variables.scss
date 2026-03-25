@@ -10,7 +10,7 @@ $yellow           : #FFCC00;
 $gray             : #8E8E93;
 
 // ELEMENT COLORS
-$color-main       : $magenta;
+$color-main       : #1f9d55;
 $border-color-nav: transparentize($color-main, 0.8);
 $border-light: #f2f2f2;
 
@@ -21,21 +21,21 @@ $fz-normal: 13px;
 $fz-small: 11px;
 
 $bg-active: transparentize($color-main, 0.9);
-$bg-second: transparentize(black, 0.95);
-$bg-light: #f7f7f7;
+$bg-second: #eef6f0;
+$bg-light: #f5faf6;
 
 
-$color-primary    : #409EFF;
-$color-success    : #67C23A;
+$color-primary    : #1f9d55;
+$color-success    : #34c759;
 $color-warning    : #E6A23C;
 $color-danger     : #F56C6C;
 $color-info       : #909399;
 
-$border-normal: #eee;
+$border-normal: var(--theme-border);
 
-$text-main      : #333;
-$text-description: #666;
-$text-subtitle  : #848484;
+$text-main      : var(--theme-text-main);
+$text-description: var(--theme-text-description);
+$text-subtitle  : var(--theme-text-subtitle);
 
 // USER CENTER
 $gradient-blue    : $cyan, $blue;

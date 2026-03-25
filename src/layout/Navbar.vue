@@ -120,42 +120,39 @@ watch(route, newValue => {
 <style lang="scss">
 @import "../scss/variables";
 
-$active-submenu-title: darken($color-main, 30%);
-$active-submenu-bg: transparentize($color-main, 0.9);
-$hover-menu-bg: transparentize($color-main, 0.4);
-
 .el-menu {
     border: none;
+    background-color: transparent;
 }
 .el-sub-menu{
     .el-menu-item{
         line-height: 40px;
         height: 40px;
         &:after{
-            background-color: $border-color-nav;
+            background-color: var(--theme-border-soft, #{$border-color-nav});
         }
     }
-    .el-menu{
-        .el-menu-item:hover{
-            background-color: $active-submenu-bg;
+        .el-menu{
+            .el-menu-item:hover{
+                background-color: var(--theme-menu-sub-bg, rgba(31, 157, 85, 0.08));
+            }
         }
-    }
     &.is-active{
-        background-color: $active-submenu-bg;
+        background-color: var(--theme-menu-sub-bg, rgba(31, 157, 85, 0.08));
         .el-sub-menu__title{
-            color: $active-submenu-title;
+            color: var(--theme-sidebar-text, #{$text-main});
             &:hover{
                 color: white;
             }
         }
         .el-menu{
             .el-menu-item{
-                color: $active-submenu-title;
-                background-color: $active-submenu-bg;
+                color: var(--theme-sidebar-text, #{$text-main});
+                background-color: var(--theme-menu-sub-bg, rgba(31, 157, 85, 0.08));
                 &.is-active{
                     color: white;
-                    //background-color: $active-submenu-bg;
-                    background-color: $color-main;
+                    background: linear-gradient(135deg, var(--theme-menu-active-start), var(--theme-menu-active-end));
+                    box-shadow: 0 8px 18px rgba(var(--theme-main-rgb), 0.24);
                 }
                 &:hover{
                     color: white;
@@ -166,7 +163,7 @@ $hover-menu-bg: transparentize($color-main, 0.4);
     &.is-opened{
         .el-menu{
             &:after{
-                background-color: #eeeeee;
+                background-color: var(--theme-border, #eeeeee);
                 content: "";
                 position: absolute;
                 bottom: 0;
@@ -183,7 +180,7 @@ $hover-menu-bg: transparentize($color-main, 0.4);
     line-height: 40px !important;
     height: 40px !important;
     font-size: 0.9rem;
-    color: $text-main;
+    color: var(--theme-sidebar-text, #{$text-main});
     border-bottom: none;
     transition: all 0s;
     i{
@@ -192,18 +189,19 @@ $hover-menu-bg: transparentize($color-main, 0.4);
 
     &.is-active {
         color: white !important;
-        background-color: $color-main;
+        background: linear-gradient(135deg, var(--theme-menu-active-start), var(--theme-menu-active-end));
+        box-shadow: 0 8px 18px rgba(var(--theme-main-rgb), 0.24);
         &:hover{
-            background-color: $color-main !important;
+            background: linear-gradient(135deg, var(--theme-menu-active-start), var(--theme-menu-active-end)) !important;
         }
     }
     &:hover{
         color: white;
-        background-color: $hover-menu-bg !important;
+        background-color: var(--theme-menu-hover-bg, rgba(31, 157, 85, 0.72)) !important;
         transition: all 0s;
     }
     &:after{
-        background-color: $border-color-nav;
+        background-color: var(--theme-border-soft, #{$border-color-nav});
         content: '';
         position: absolute;
         bottom: 0;

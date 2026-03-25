@@ -51,8 +51,8 @@ const handleClick = () => {
     border: 1px solid $border-normal;
     @extend .btn-like;
     &:hover{
-        border-color: $color-primary;
-        color: $color-primary;
+        border-color: var(--theme-main);
+        color: var(--theme-main);
         @include box-shadow(1px 2px 2px transparentize(black, 0.8))
     }
 }

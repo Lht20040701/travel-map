@@ -46,7 +46,7 @@ function login(){
 <style lang="scss" scoped>
 @import "../scss/plugin";
 .copyright{
-    border-top: 1px solid $border-color-nav;
+    border-top: 1px solid var(--theme-border-soft, #{$border-color-nav});
     display: flex;
     flex-flow: column nowrap;
     justify-content: flex-end;
@@ -54,7 +54,7 @@ function login(){
     dl{
         font-size: 0.7rem;
         line-height: 1.5;
-        color: $text-subtitle;
+        color: var(--theme-sidebar-muted, #{$text-subtitle});
         display: flex;
         justify-content: space-between;
         dd{
@@ -66,12 +66,12 @@ function login(){
     margin-left: 10px;
     @extend .btn-like;
     &:hover{
-        color: $color-main;
+        color: var(--theme-main);
     }
 }
 a{
     &:hover{
-        color: $color-main;
+        color: var(--theme-main);
         text-decoration: underline;
     }
 }
