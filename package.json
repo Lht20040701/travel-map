@@ -24,6 +24,7 @@
     "clipboard": "^2.0.11",
     "core-js": "^3.8.3",
     "countup.js": "^2.8.0",
+    "cropperjs": "^1.6.2",
     "echarts": "^5.5.0",
     "element-plus": "^2.6.0",
     "fast-xml-parser": "^4.3.3",

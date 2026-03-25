@@ -41,7 +41,20 @@
                                 <img src="../assets/logo.png" alt="default-avatar" />
                             </ElAvatar>
                             <div class="avatar-upload">
-                                <ElInput v-model="form.avatar" placeholder="头像URL" autocomplete="off"/>
+                                <input
+                                    ref="avatarInputRef"
+                                    type="file"
+                                    accept="image/*"
+                                    class="hidden-avatar-input"
+                                    @change="handleAvatarSelect"
+                                />
+                                <div class="avatar-actions">
+                                    <ElButton :loading="isUploadingAvatar" type="primary" @click="chooseAvatarFile">
+                                        上传头像
+                                    </ElButton>
+                                    <span class="avatar-tip">上传后可裁剪，完成后自动保存到七牛云</span>
+                                </div>
+                                <ElInput v-model="form.avatar" placeholder="头像URL" autocomplete="off" readonly/>
                             </div>
                         </div>
 
@@ -78,21 +91,50 @@
                 </div>
             </ElCol>
         </ElRow>
+
+        <ElDialog
+            v-model="isCropperVisible"
+            title="裁剪头像"
+            width="720px"
+            destroy-on-close
+            @closed="closeCropperDialog"
+        >
+            <div class="cropper-wrapper">
+                <img ref="cropperImageRef" :src="cropperImageUrl" alt="待裁剪头像" class="cropper-image" />
+            </div>
+            <template #footer>
+                <div class="cropper-footer">
+                    <ElButton @click="isCropperVisible = false">取消</ElButton>
+                    <ElButton type="primary" :loading="isUploadingAvatar" @click="confirmAvatarCrop">裁剪并上传</ElButton>
+                </div>
+            </template>
+        </ElDialog>
     </div>
 </template>
 
 <script lang="ts" setup>
 import userApi from "@/api/userApi";
-import {reactive, ref, onMounted} from "vue";
+import {reactive, ref, onMounted, nextTick, onBeforeUnmount} from "vue";
 import {useProjectStore} from "@/store.ts";
 import {ElNotification, ElMessage} from "element-plus";
 import {getAuthorization, setAuthorization} from "@/utility.ts";
+import {getUploadToken} from "@/api/fileApi.ts";
+import {qiniu_bucket_name, qiniu_img_base_url} from "@/mapConfig.ts";
+import * as qiniu from "qiniu-js";
+import Cropper from "cropperjs";
+import "cropperjs/dist/cropper.css";
 
 const store = useProjectStore()
 
 const refFormProfile = ref()
+const avatarInputRef = ref<HTMLInputElement | null>(null)
+const cropperImageRef = ref<HTMLImageElement | null>(null)
 const isEditing = ref(false)
 const saving = ref(false)
+const isCropperVisible = ref(false)
+const isUploadingAvatar = ref(false)
+const cropperImageUrl = ref("")
+let cropper: Cropper | null = null
 
 const userInfo = ref({
     uid: 0,
@@ -159,6 +201,7 @@ function startEditing() {
 
 function cancelEditing() {
     isEditing.value = false
+    closeCropperDialog()
     // Reset form to current user info
     form.value = {
         nickname: userInfo.value.nickname || '',
@@ -168,6 +211,140 @@ function cancelEditing() {
         avatar: userInfo.value.avatar || '',
         city: userInfo.value.city || '',
         comment: userInfo.value.comment || ''
+    }
+}
+
+function chooseAvatarFile() {
+    if (isUploadingAvatar.value) {
+        return
+    }
+    avatarInputRef.value?.click()
+}
+
+function handleAvatarSelect(event: Event) {
+    const input = event.target as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file) {
+        return
+    }
+
+    if (!file.type.startsWith("image/")) {
+        ElMessage.warning("请选择图片文件")
+        input.value = ""
+        return
+    }
+
+    if (file.size > 1024 * 1024 * 8) {
+        ElMessage.warning("图片应小于 8MB")
+        input.value = ""
+        return
+    }
+
+    if (cropperImageUrl.value) {
+        URL.revokeObjectURL(cropperImageUrl.value)
+    }
+    cropperImageUrl.value = URL.createObjectURL(file)
+    isCropperVisible.value = true
+
+    nextTick(() => {
+        initCropper()
+    })
+
+    input.value = ""
+}
+
+function initCropper() {
+    if (!cropperImageRef.value) {
+        return
+    }
+    destroyCropper()
+    cropper = new Cropper(cropperImageRef.value, {
+        aspectRatio: 1,
+        viewMode: 1,
+        dragMode: "move",
+        autoCropArea: 1,
+        background: false,
+        responsive: true,
+        guides: false,
+        minCropBoxWidth: 120,
+        minCropBoxHeight: 120,
+    })
+}
+
+function destroyCropper() {
+    if (cropper) {
+        cropper.destroy()
+        cropper = null
+    }
+}
+
+function closeCropperDialog() {
+    destroyCropper()
+    if (cropperImageUrl.value) {
+        URL.revokeObjectURL(cropperImageUrl.value)
+        cropperImageUrl.value = ""
+    }
+}
+
+function getCroppedAvatarBlob(): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+        if (!cropper) {
+            reject(new Error("裁剪器未初始化"))
+            return
+        }
+
+        const canvas = cropper.getCroppedCanvas({
+            width: 400,
+            height: 400,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: "high",
+        })
+
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                reject(new Error("头像裁剪失败"))
+                return
+            }
+            resolve(blob)
+        }, "image/jpeg", 0.9)
+    })
+}
+
+function uploadAvatarToQiniu(file: Blob): Promise<string> {
+    return getUploadToken({
+        bucket: qiniu_bucket_name
+    }).then(res => {
+        return new Promise((resolve, reject) => {
+            const observable = qiniu.upload(file, null, res.data, {}, {})
+            const observer = {
+                next: () => {
+                },
+                error: (err) => {
+                    reject(err)
+                },
+                complete: (uploadResult) => {
+                    resolve(qiniu_img_base_url + uploadResult.key)
+                }
+            }
+            observable.subscribe(observer)
+        })
+    })
+}
+
+async function confirmAvatarCrop() {
+    try {
+        isUploadingAvatar.value = true
+        const avatarBlob = await getCroppedAvatarBlob()
+        const avatarUrl = await uploadAvatarToQiniu(avatarBlob)
+        form.value.avatar = avatarUrl
+        ElMessage.success("头像上传成功")
+        isCropperVisible.value = false
+        closeCropperDialog()
+    } catch (err: any) {
+        console.error(err)
+        ElMessage.error(err?.message || "头像上传失败")
+    } finally {
+        isUploadingAvatar.value = false
     }
 }
 
@@ -219,6 +396,10 @@ function saveProfile() {
 onMounted(() => {
     loadUserInfo()
 })
+
+onBeforeUnmount(() => {
+    closeCropperDialog()
+})
 </script>
 
 <style scoped lang="scss">
@@ -262,6 +443,43 @@ onMounted(() => {
         margin-top: 15px;
         width: 300px;
     }
+}
+
+.hidden-avatar-input {
+    display: none;
+}
+
+.avatar-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.avatar-tip {
+    color: $text-description;
+    font-size: 12px;
+}
+
+.cropper-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 420px;
+    background-color: #f5f7fa;
+}
+
+.cropper-image {
+    display: block;
+    max-width: 100%;
+    max-height: 420px;
+}
+
+.cropper-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
 }
 
 .actions {
