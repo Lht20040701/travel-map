@@ -16,7 +16,8 @@ export interface LuntanEntity {
     luntanId:    number;
     title:       string;
     uid:         number;
-    routeId:     null;
+    routerId:    number | null;
+    routeName?:  string | null;
     cardId:      number;
     replies:     number;
     views:       number;

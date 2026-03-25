@@ -106,7 +106,6 @@ import {marked} from "marked";
 import Toolbar from "@/layout/Toolbar.vue";
 import forumApi from "@/api/forumApi.ts";
 import userApi from "@/api/userApi.ts";
-import routeApi from "@/api/routeApi.ts";
 import ForumComments from "./ForumComments.vue";
 
 const store = useProjectStore()
@@ -133,11 +132,6 @@ onMounted(() => {
 
         // 预加载主题作者的信息
         loadUserInfo(topic.value.uid)
-
-        // 如果有路线ID，加载路线名称
-        if (topic.value.routerId) {
-            loadRouteName(topic.value.routerId)
-        }
     })
 })
 
@@ -157,18 +151,6 @@ const loadUserInfo = async (uid) => {
     console.error('获取用户信息失败:', err)
     userCache.value[uid] = { avatar: '', nickname: '未知用户' }
     return { avatar: '', nickname: '未知用户' }
-  }
-}
-
-// 加载路线名称
-const loadRouteName = async (routerId: number) => {
-  try {
-    const res = await routeApi.detail({ id: routerId })
-    // 将路线名称保存到 topic 对象中
-    topic.value.routeName = res.data.name
-  } catch (err) {
-    console.error('获取路线信息失败:', err)
-    topic.value.routeName = ''
   }
 }
 

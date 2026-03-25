@@ -180,7 +180,6 @@ import FooterPagination from "@/layout/FooterPagination.vue";
 import Toolbar from "@/layout/Toolbar.vue";
 import forumApi from "@/api/forumApi.ts";
 import userApi from "@/api/userApi.ts";
-import routeApi from "@/api/routeApi.ts";
 
 const store = useProjectStore()
 const router = useRouter()
@@ -295,13 +294,6 @@ function getForumList() {
           item.author = _res.data.nickname
         })
       })
-      tableData.value.map(item => {
-        if (item.routerId) {
-          routeApi.detail({ id: item.routerId }).then(_res => {
-            item.routeName = _res.data.name
-          })
-        }
-      })
     })
   })
 }
@@ -318,11 +310,6 @@ function getHotForumList() {
     hotTopics.value.map(item => {
       userApi.getAvatarAndNickname(item.uid).then(_res => {
         item.author = _res.data.nickname
-      })
-    })
-    hotTopics.value.map(item => {
-      routeApi.detail({ id: item.routerId }).then(_res => {
-        item.routeName = _res.data.name
       })
     })
   })
